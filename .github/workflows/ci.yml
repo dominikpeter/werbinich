@@ -80,10 +80,11 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        # the CLI reads VERCEL_TOKEN from the environment: no secret on a command line
         run: |
-          npx vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
-          npx vercel build --prod --token="$VERCEL_TOKEN"
-          npx vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+          npx vercel pull --yes --environment=production
+          npx vercel build --prod
+          npx vercel deploy --prebuilt --prod
       - name: Tag and publish the GitHub release
         # the release pull request's description (what `just release` wrote) on top, then GitHub's list of merged PRs
         env:

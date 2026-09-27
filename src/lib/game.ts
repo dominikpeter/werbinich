@@ -164,6 +164,7 @@ export function cancel(r: Room) {
   r.players.forEach((p) => Object.assign(p, fresh(), { writesFor: "" }));
   r.phase = "lobby";
   r.turn = "";
+  r.game++; // AI answers still in flight for the old round see a new number and are dropped
 }
 
 /** the writer (or, in a one-phone game, the host) turns the card face up for everyone */

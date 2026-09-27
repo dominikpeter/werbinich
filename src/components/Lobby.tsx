@@ -12,7 +12,7 @@ export function Lobby({ view, act, code }: PhaseProps) {
 
   useEffect(() => {
     // loaded only here: the QR library stays out of every other screen's bundle
-    if (!view.local) import("qrcode").then((QRCode) => QRCode.toDataURL(`${location.origin}/r/${code}`, { margin: 1, width: 360, color: { dark: "#0b0a12", light: "#f4f1ff" } })).then(setQr);
+    if (!view.local) import("qrcode").then((m) => (m.default ?? m).toDataURL(`${location.origin}/r/${code}`, { margin: 1, width: 360, color: { dark: "#0b0a12", light: "#f4f1ff" } })).then(setQr);
   }, [code, view.local]);
 
   const add = async () => {

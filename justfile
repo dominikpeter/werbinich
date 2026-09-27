@@ -76,7 +76,8 @@ release version notes: check secrets
     set -euo pipefail
     [ "$(git branch --show-current)" != main ] || { echo "release from dev: main only changes through a pull request"; exit 1; }
     npm version {{version}} --no-git-tag-version --allow-same-version
-    git add package.json package-lock.json && git commit -m "release: v{{version}}" || true
+    git add package.json package-lock.json
+    git diff --cached --quiet || git commit -m "release: v{{version}}" # same version again: nothing to commit; a failing hook still stops here
     just version-check
     git push -u origin HEAD
     open=$(gh pr list --head "$(git branch --show-current)" --state open --json number -q '.[0].number // ""')

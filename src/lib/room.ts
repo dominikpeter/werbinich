@@ -75,6 +75,10 @@ function actor(r: Room, pid: unknown, token: unknown, as?: unknown) {
 const hostOnly = (r: Room, me: string) => {
   if (me !== r.host) throw new GameError("not_host", 403);
 };
+/** AI ran outside the lock: its result only lands in the round it was asked for */
+const sameRound = (r: Room, game: number) => {
+  if (r.game !== game) throw new GameError("stale");
+};
 const spend = (r: Room, n: number) => {
   if (r.aiCalls + n > AI_CAP) throw new GameError("ai_limit", 429);
   r.aiCalls += n;
@@ -145,10 +149,12 @@ export async function act(db: Store, code: string, pid: unknown, token: unknown,
       if (!p || r.turn !== me || p.status !== "playing" || r.phase !== "play") throw new GameError("not_your_turn");
       if (p.jokers < 1) throw new GameError("no_jokers");
       if (!ai.aiOn()) throw new GameError("no_ai", 503);
+      const round = r.game;
       const questions = await ai.joker(p, r.lang);
       if (!questions.length) throw new GameError("no_ai", 503);
       const best = questions.reduce((b, q, i) => (q.p > questions[b].p ? i : b), 0);
       return mutate(db, code, (r) => {
+        sameRound(r, round);
         spend(r, 2);
         const p = byId(r, me)!;
         if (p.jokers < 1) throw new GameError("no_jokers");
@@ -160,8 +166,10 @@ export async function act(db: Store, code: string, pid: unknown, token: unknown,
     case "giveup": {
       const p = byId(r, me);
       if (!p || r.turn !== me || p.status !== "playing") throw new GameError("not_your_turn");
+      const round = r.game;
       const g = ai.aiOn() ? await ai.giveUpPick(p, r.lang).catch(() => null) : null;
       return mutate(db, code, (r) => {
+        sameRound(r, round);
         if (g) spend(r, 2);
         giveUp(r, me, g ?? { candidates: [], pick: -1 });
       });
@@ -178,7 +186,9 @@ async function askWithJev(db: Store, r: Room, me: string, text: string, opts: { 
   const probe = structuredClone(r);
   const q = ask(probe, me, text, { ...opts, id: id() }); // throws now if it's not their turn, before any AI spend
   const verdict = await (early ?? judge(q.text, byId(r, me)!.person));
-  return mutate(db, r.code, (r) => {
+  return mutate(db, r.code, (next) => {
+    sameRound(next, r.game);
+    r = next;
     if (verdict) spend(r, 1);
     const added = ask(r, me, q.text, { ...opts, id: q.id });
     Object.assign(added, verdict ?? {});
@@ -192,9 +202,11 @@ async function measure(db: Store, code: string, qid: string) {
   const r = await load(db, code);
   const p = r.players.find((p) => p.questions.some((q) => q.id === qid));
   if (!p) return;
+  const round = r.game;
   const w = await ai.warmth(p).catch(() => null);
   if (w === null) return;
   await mutate(db, code, (r) => {
+    if (r.game !== round) return;
     spend(r, 1);
     const q = r.players.flatMap((p) => p.questions).find((q) => q.id === qid);
     if (q) q.warmth = w;
