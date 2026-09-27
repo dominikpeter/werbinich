@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   appId: "ai.werbinich.app",
   appName: "Wer bin ich?",
   webDir: "native-shell",
-  server: { url: "https://werbinich.vercel.app", errorPath: "offline.html" },
+  server: { url: "https://werbinich-psi.vercel.app", errorPath: "offline.html" },
   plugins: {
     SplashScreen: { launchShowDuration: 600, backgroundColor: "#0b0a12", showSpinner: false },
   },
