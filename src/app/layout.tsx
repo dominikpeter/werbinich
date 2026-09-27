@@ -1,10 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { JetBrains_Mono, Space_Grotesk, Syne } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-const syne = Syne({ variable: "--font-syne", subsets: ["latin"], weight: ["700", "800"] });
-const grotesk = Space_Grotesk({ variable: "--font-grotesk", subsets: ["latin"] });
-const jet = JetBrains_Mono({ variable: "--font-jet", subsets: ["latin"], weight: ["400", "600"] });
+// one clean family for everything, its mono twin for the AI's readouts (the terminal glow)
+const geist = Geist({ variable: "--font-geist", subsets: ["latin"] });
+const mono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 const description = "Wer bin ich? Das Partyspiel, bei dem die KI mithört: sprich deine Fragen, Jev rechnet mit, Luna gibt Tipps.";
 export const metadata: Metadata = {
@@ -22,7 +22,7 @@ const langScript = `try{var l=localStorage.getItem("werbinich:lang");if(l)docume
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="de" className={`${syne.variable} ${grotesk.variable} ${jet.variable} h-full antialiased`} suppressHydrationWarning>
+    <html lang="de" className={`${geist.variable} ${mono.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: langScript }} />
       </head>

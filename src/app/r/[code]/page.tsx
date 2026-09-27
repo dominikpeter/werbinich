@@ -92,7 +92,7 @@ function JoinHere({ code, onJoined }: { code: string; onJoined: (id: Identity) =
   return (
     <Center>
       <p className="font-mono tracking-code text-muted">{code}</p>
-      <h1 className="font-display text-4xl font-extrabold">Wer bin ich?</h1>
+      <h1 className="font-display text-4xl font-bold">Wer bin ich?</h1>
       <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("yourName")} aria-label={t("yourName")} maxLength={24} className="glass w-full rounded-2xl px-4 py-3.5 text-lg outline-none" />
       <Btn className="w-full" disabled={!name.trim()} onClick={join}>{t("join")}</Btn>
       {err && <p className="text-sm text-no">{err}</p>}

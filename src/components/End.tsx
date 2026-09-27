@@ -15,7 +15,7 @@ export function End({ view, act }: PhaseProps) {
   return (
     <div className="flex flex-1 flex-col gap-4">
       <div className="rise text-center">
-        <h1 className="font-display text-4xl font-extrabold">{t("end")}</h1>
+        <h1 className="font-display text-4xl font-bold">{t("end")}</h1>
         <p className="text-sm text-muted">{t("endSub")}</p>
       </div>
 
@@ -41,7 +41,7 @@ export function End({ view, act }: PhaseProps) {
                 {/* face up */}
                 <button onClick={() => setPick(p.id)} className={`face back flex h-40 flex-col items-center justify-center gap-1 rounded-2xl p-3 text-center ${p.status === "solved" ? "bg-gold text-gold-ink" : "glass"} ${pick === p.id ? "glow-jev" : ""}`}>
                   <span className="text-xs font-semibold opacity-70">{p.name}</span>
-                  <span className="font-display text-xl leading-tight font-extrabold" data-testid="card-person">{p.person}</span>
+                  <span className="font-display text-xl leading-tight font-bold" data-testid="card-person">{p.person}</span>
                   <span className="mt-1 font-mono text-2xs opacity-80">
                     {p.status === "solved" ? <><Star className="inline size-3" fill="currentColor" /> {t("place", { n: p.place })} · </> : `${t("gaveUp")} · `}
                     {t("questions", { n: p.questions.length })}

@@ -6,12 +6,12 @@ import { api, ApiError, NAME_KEY, saveIdentity } from "@/lib/client";
 import { Btn, LangSwitch, useLang } from "@/components/ui";
 import type { Key } from "@/lib/i18n";
 
-// floating "forehead" notes on the hero: who might you be?
+// "forehead" notes over the title: who might you be?
 const NOTES = [
-  { name: "Heidi", cls: "left-[6%] top-8 -rotate-6" },
-  { name: "Einstein", cls: "right-[8%] top-2 rotate-6" },
-  { name: "Federer", cls: "left-[18%] top-36 rotate-3" },
-  { name: "Pippi", cls: "right-[14%] top-32 -rotate-3" },
+  { name: "Heidi", r: "-rotate-6" },
+  { name: "Einstein", r: "rotate-3" },
+  { name: "Federer", r: "-rotate-2" },
+  { name: "Pippi", r: "rotate-6" },
 ];
 
 export default function Home() {
@@ -46,17 +46,17 @@ export default function Home() {
         <LangSwitch />
       </div>
 
-      <section className="relative h-56 short:h-40">
-        {NOTES.map((n, i) => (
-          <div key={n.name} className={`float absolute rounded-lg bg-gold px-3 py-1.5 font-display text-sm font-bold text-gold-ink shadow-lg ${n.cls}`} style={{ animationDelay: `${i * 0.7}s` }}>
-            {n.name}?
-          </div>
-        ))}
-        <div className="absolute inset-x-0 bottom-0 text-center">
-          <h1 className="font-display text-6xl leading-none font-extrabold tracking-tight short:text-5xl">
-            Wer bin <span className="bg-gradient-to-r from-jev to-luna bg-clip-text text-transparent">ich?</span>
-          </h1>
+      <section className="mt-8 flex flex-col items-center gap-6 short:mt-2">
+        <div className="flex flex-wrap justify-center gap-2.5">
+          {NOTES.map((n, i) => (
+            <span key={n.name} className={`float rounded-lg bg-gold px-3 py-1 text-sm font-semibold text-gold-ink shadow-lg ${n.r}`} style={{ animationDelay: `${i * 0.6}s` }}>
+              {n.name}?
+            </span>
+          ))}
         </div>
+        <h1 className="text-center text-6xl leading-none font-bold tracking-tighter short:text-5xl">
+          Wer bin <span className="bg-gradient-to-r from-jev to-luna bg-clip-text text-transparent">ich?</span>
+        </h1>
       </section>
 
       <p className="mt-4 text-center text-lg font-semibold">{t("tagline")}</p>

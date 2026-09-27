@@ -62,7 +62,7 @@ export function Play({ view, act, code, id, refresh }: PhaseProps) {
       <section className="rise flex items-end justify-between gap-3">
         <div>
           <p className="text-xs font-semibold tracking-wider text-muted uppercase">{view.me === view.turn && !view.local ? t("yourTurn") : t("turnOf", { name: guesser.name })}</p>
-          <h1 className="font-display text-3xl font-extrabold" data-testid="guesser">{guesser.name}</h1>
+          <h1 className="font-display text-3xl font-bold" data-testid="guesser">{guesser.name}</h1>
         </div>
         {iAnswer && guesser.person && <PersonCard person={guesser.person} hideFrom={view.local ? guesser.name : ""} jev={view.local && open?.truth !== undefined ? `${t("jevSays")}: ${open.truth >= 0.5 ? t("yes") : t("no")} ${Math.round(Math.max(open.truth, 1 - open.truth) * 100)}%` : ""} />}
       </section>
@@ -179,12 +179,12 @@ function PersonCard({ person, hideFrom, jev }: { person: string; hideFrom: strin
   const { t } = useLang();
   const [peek, setPeek] = useState(false);
   if (!hideFrom)
-    return <div className="pop max-w-card -rotate-2 rounded-xl bg-gold px-4 py-2 text-right font-display text-lg leading-tight font-extrabold text-gold-ink shadow-lg" data-testid="person">{person}</div>;
+    return <div className="pop max-w-card -rotate-2 rounded-xl bg-gold px-4 py-2 text-right font-display text-lg leading-tight font-bold text-gold-ink shadow-lg" data-testid="person">{person}</div>;
   return (
     <button onPointerDown={() => setPeek(true)} onPointerUp={() => setPeek(false)} onPointerLeave={() => setPeek(false)} onContextMenu={(e) => e.preventDefault()} className="max-w-card touch-none rounded-xl bg-gold px-3 py-2 text-right leading-tight text-gold-ink select-none">
       {peek ? (
         <>
-          <span className="block font-display text-lg font-extrabold" data-testid="person">{person}</span>
+          <span className="block font-display text-lg font-bold" data-testid="person">{person}</span>
           {jev && <span className="block font-mono text-2xs">{jev}</span>}
         </>
       ) : (
@@ -201,7 +201,7 @@ function JokerSheet({ joker, onClose, onAsk }: { joker: Joker; onClose: () => vo
     <div className="fixed inset-0 z-20 flex items-end bg-canvas/70 backdrop-blur-sm" onClick={onClose}>
       <div className="rise glass mx-auto w-full max-w-md rounded-t-3xl p-5 pb-8" onClick={(e) => e.stopPropagation()} data-testid="joker">
         <div className="flex items-start justify-between">
-          <h2 className="font-display text-2xl font-extrabold"><span className="text-luna">Luna</span> × <span className="text-jev">Jev</span></h2>
+          <h2 className="font-display text-2xl font-bold"><span className="text-luna">Luna</span> × <span className="text-jev">Jev</span></h2>
           <button onClick={onClose} aria-label="close" className="p-1 text-muted"><X className="size-5" /></button>
         </div>
         <p className="mt-1 text-xs text-muted">{t("jokerHint")}</p>
@@ -254,12 +254,12 @@ export function Celebrations({ view }: { view: PhaseProps["view"] }) {
         <div className="pop flex flex-col items-center gap-3 text-center">
           <Star className="size-20 text-gold" fill="currentColor" />
           <p className="font-display text-2xl font-bold">{show.name}</p>
-          <p className="glow-gold rounded-2xl bg-gold px-6 py-3 font-display text-4xl font-extrabold text-gold-ink">{show.person}</p>
+          <p className="glow-gold rounded-2xl bg-gold px-6 py-3 font-display text-4xl font-bold text-gold-ink">{show.person}</p>
           <p className="font-mono text-sm text-muted">{t("guessedIt", { n: show.questions.length })}</p>
         </div>
       ) : (
         <div className="pop glass w-full max-w-sm rounded-3xl p-5">
-          <h2 className="font-display text-2xl font-extrabold">{t("giveUpTitle")}</h2>
+          <h2 className="font-display text-2xl font-bold">{t("giveUpTitle")}</h2>
           {g && g.candidates.length > 0 && (
             <ul className="mt-4 flex flex-col gap-2">
               {g.candidates.map((c, i) => (
@@ -275,7 +275,7 @@ export function Celebrations({ view }: { view: PhaseProps["view"] }) {
           )}
           {g && g.pick >= 0 && <p className="mt-3 font-mono text-xs text-jev">{t("jevPick")}: {g.candidates[g.pick]?.name}</p>}
           <p className="mt-4 text-sm text-muted">{t("wasIt")}</p>
-          <p className="font-display text-3xl font-extrabold text-gold">{show.person}</p>
+          <p className="font-display text-3xl font-bold text-gold">{show.person}</p>
         </div>
       )}
     </div>
