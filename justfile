@@ -70,7 +70,28 @@ pr:
     open=$(gh pr list --head "$(git branch --show-current)" --state open --json url -q '.[0].url // ""')
     if [ -n "$open" ]; then echo "$open"; else gh pr create --base main --fill; fi
 
-# deploy the current tree to production by hand (normally a merge into main does it)
+# on dev: bump the version onto the PR into main; merging it ships (CI: Vercel deploy, tag, GitHub release, iOS). `just release 0.2.0 "notes"`
+release version notes: check secrets
+    #!/usr/bin/env bash
+    set -euo pipefail
+    [ "$(git branch --show-current)" != main ] || { echo "release from dev: main only changes through a pull request"; exit 1; }
+    npm version {{version}} --no-git-tag-version --allow-same-version
+    git add package.json package-lock.json
+    git diff --cached --quiet || git commit -m "release: v{{version}}" # same version again: nothing to commit; a failing hook still stops here
+    just version-check
+    git push -u origin HEAD
+    open=$(gh pr list --head "$(git branch --show-current)" --state open --json number -q '.[0].number // ""')
+    if [ -n "$open" ]; then gh pr edit "$open" --title "Release v{{version}}" --body {{quote(notes)}} && gh pr view "$open" --json url -q .url; else gh pr create --base main --title "Release v{{version}}" --body {{quote(notes)}}; fi
+
+# the version the settings sheet shows (package.json) matches the release tag and GitHub's latest release
+version-check:
+    bash scripts/check-version.sh
+
+# one-time: give ci.yml's deploy job a Vercel token (asks for it hidden, never echoed) so CI can deploy on its own
+vercel-ci-setup:
+    bash scripts/setup-vercel-ci.sh
+
+# deploy the current tree to production by hand (normally a release merge into main does it)
 deploy:
     vercel deploy --prod
 

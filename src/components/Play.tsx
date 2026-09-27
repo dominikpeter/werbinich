@@ -5,7 +5,7 @@ import type { PhaseProps } from "@/app/r/[code]/page";
 import type { Joker, ViewPlayer } from "@/lib/game";
 import { useListener, type Clip } from "@/lib/listen";
 import { Tree } from "./Tree";
-import { Btn, useLang, Warmth } from "./ui";
+import { Btn, useLang, useVoice, Warmth } from "./ui";
 
 type Heard = { text: string; did: string };
 
@@ -34,7 +34,8 @@ export function Play({ view, act, code, id, refresh }: PhaseProps) {
   };
   // the mic opens on first use (hands-free or a press) and stays open; only detected speech ever leaves the phone
   const [micOn, setMicOn] = useState(false);
-  const ear = useListener(view.ai && iAsk && micOn, handsFree, onClip);
+  const voice = useVoice() && view.ai; // voice switched off in the settings: the mic never opens, questions are typed
+  const ear = useListener(voice && iAsk && micOn, handsFree, onClip);
 
   // ---- typed fallback, joker, give-up ----
   const [typing, setTyping] = useState(!view.ai);
@@ -62,7 +63,7 @@ export function Play({ view, act, code, id, refresh }: PhaseProps) {
       <section className="rise flex items-end justify-between gap-3">
         <div>
           <p className="text-xs font-semibold tracking-wider text-muted uppercase">{view.me === view.turn && !view.local ? t("yourTurn") : t("turnOf", { name: guesser.name })}</p>
-          <h1 className="font-display text-3xl font-extrabold" data-testid="guesser">{guesser.name}</h1>
+          <h1 className="text-4xl font-bold tracking-tight" data-testid="guesser">{guesser.name}</h1>
         </div>
         {iAnswer && guesser.person && <PersonCard person={guesser.person} hideFrom={view.local ? guesser.name : ""} jev={view.local && open?.truth !== undefined ? `${t("jevSays")}: ${open.truth >= 0.5 ? t("yes") : t("no")} ${Math.round(Math.max(open.truth, 1 - open.truth) * 100)}%` : ""} />}
       </section>
@@ -77,14 +78,14 @@ export function Play({ view, act, code, id, refresh }: PhaseProps) {
       {/* the table's side: the open question, Jev's quiet opinion, the answer */}
       {iAnswer && open && (
         <section className="pop glass glow-jev rounded-3xl p-4" data-testid="answer-panel">
-          <p className="font-display text-xl font-bold">{open.text}</p>
+          <p className="text-2xl leading-tight font-bold">{open.text}</p>
           {open.truth !== undefined && !view.local && (
             <p className="mt-1 font-mono text-xs text-jev">
               {t("jevSays")}: {open.truth >= 0.5 ? t("yes") : t("no")} · {Math.round(Math.max(open.truth, 1 - open.truth) * 100)}%
               {(open.guess ?? 0) > 0.5 && <> · <Star className="inline size-3" /> {t("solved")}?</>}
             </p>
           )}
-          <div className="mt-3 grid grid-cols-3 gap-2">
+          <div className="mt-4 grid grid-cols-3 gap-2 [&>button]:min-h-16 [&>button]:text-lg">
             <Btn tone="yes" onClick={() => act({ type: "answer", qid: open.id, answer: "yes" })}>{t("yes")}</Btn>
             <Btn tone="no" onClick={() => act({ type: "answer", qid: open.id, answer: "no" })}>{t("no")}</Btn>
             <Btn tone="gold" onClick={() => act({ type: "answer", qid: open.id, answer: "yes", solved: true })}>{t("solved")}</Btn>
@@ -102,7 +103,7 @@ export function Play({ view, act, code, id, refresh }: PhaseProps) {
             </p>
           )}
           {ear.error && <p className="text-center text-xs text-no">{t("micDenied")}</p>}
-          {typing || !view.ai || ear.error ? (
+          {typing || !voice || ear.error ? (
             <form onSubmit={(e) => (e.preventDefault(), ask(text))} className="flex gap-2">
               <input value={text} onChange={(e) => setText(e.target.value)} disabled={!!open} placeholder={t("askPh")} aria-label={t("ask")} maxLength={200} className="glass w-0 flex-1 rounded-2xl px-4 py-3 outline-none disabled:opacity-40" />
               <Btn type="submit" disabled={!!open || !text.trim()}>{t("send")}</Btn>
@@ -116,7 +117,7 @@ export function Play({ view, act, code, id, refresh }: PhaseProps) {
             </div>
           )}
           <div className="flex items-center justify-between gap-2">
-            {view.ai && (
+            {voice && (
               <button onClick={() => setTyping((x) => !x)} className="rounded-xl p-2 text-muted" aria-label="keyboard">
                 {typing ? <Mic className="size-5" /> : <Keyboard className="size-5" />}
               </button>
@@ -164,10 +165,10 @@ function MicButton({ ear, busy, handsFree, label, onFirst }: { ear: ReturnType<t
         onPointerLeave={end}
         onContextMenu={(e) => e.preventDefault()}
         aria-label={label}
-        className={`mic-ring grid size-20 touch-none place-items-center rounded-full transition select-none disabled:opacity-40 ${down || (handsFree && ear.speaking) ? "scale-110 bg-luna text-canvas" : handsFree ? "bg-raised text-luna" : "bg-ink text-canvas"}`}
+        className={`mic-ring grid size-24 touch-none place-items-center rounded-full transition select-none disabled:opacity-40 ${down || (handsFree && ear.speaking) ? "scale-110 bg-luna text-canvas" : handsFree ? "bg-raised text-luna" : "bg-ink text-canvas"}`}
         style={{ "--level": handsFree || down ? ear.level : 0 } as React.CSSProperties}
       >
-        {busy ? <span className="size-6 animate-spin rounded-full border-2 border-current border-t-transparent" /> : <Mic className="size-8" />}
+        {busy ? <span className="size-6 animate-spin rounded-full border-2 border-current border-t-transparent" /> : <Mic className="size-10" />}
       </button>
       <span className="font-mono text-xs text-muted">{busy ? t("thinking") : label}</span>
     </div>
@@ -179,12 +180,12 @@ function PersonCard({ person, hideFrom, jev }: { person: string; hideFrom: strin
   const { t } = useLang();
   const [peek, setPeek] = useState(false);
   if (!hideFrom)
-    return <div className="pop max-w-card -rotate-2 rounded-xl bg-gold px-4 py-2 text-right font-display text-lg leading-tight font-extrabold text-gold-ink shadow-lg" data-testid="person">{person}</div>;
+    return <div className="pop max-w-card -rotate-2 rounded-xl bg-gold px-4 py-2 text-right font-display text-lg leading-tight font-bold text-gold-ink shadow-lg" data-testid="person">{person}</div>;
   return (
     <button onPointerDown={() => setPeek(true)} onPointerUp={() => setPeek(false)} onPointerLeave={() => setPeek(false)} onContextMenu={(e) => e.preventDefault()} className="max-w-card touch-none rounded-xl bg-gold px-3 py-2 text-right leading-tight text-gold-ink select-none">
       {peek ? (
         <>
-          <span className="block font-display text-lg font-extrabold" data-testid="person">{person}</span>
+          <span className="block font-display text-lg font-bold" data-testid="person">{person}</span>
           {jev && <span className="block font-mono text-2xs">{jev}</span>}
         </>
       ) : (
@@ -201,7 +202,7 @@ function JokerSheet({ joker, onClose, onAsk }: { joker: Joker; onClose: () => vo
     <div className="fixed inset-0 z-20 flex items-end bg-canvas/70 backdrop-blur-sm" onClick={onClose}>
       <div className="rise glass mx-auto w-full max-w-md rounded-t-3xl p-5 pb-8" onClick={(e) => e.stopPropagation()} data-testid="joker">
         <div className="flex items-start justify-between">
-          <h2 className="font-display text-2xl font-extrabold"><span className="text-luna">Luna</span> × <span className="text-jev">Jev</span></h2>
+          <h2 className="font-display text-2xl font-bold"><span className="text-luna">Luna</span> × <span className="text-jev">Jev</span></h2>
           <button onClick={onClose} aria-label="close" className="p-1 text-muted"><X className="size-5" /></button>
         </div>
         <p className="mt-1 text-xs text-muted">{t("jokerHint")}</p>
@@ -254,12 +255,12 @@ export function Celebrations({ view }: { view: PhaseProps["view"] }) {
         <div className="pop flex flex-col items-center gap-3 text-center">
           <Star className="size-20 text-gold" fill="currentColor" />
           <p className="font-display text-2xl font-bold">{show.name}</p>
-          <p className="glow-gold rounded-2xl bg-gold px-6 py-3 font-display text-4xl font-extrabold text-gold-ink">{show.person}</p>
+          <p className="glow-gold rounded-2xl bg-gold px-6 py-3 font-display text-4xl font-bold text-gold-ink">{show.person}</p>
           <p className="font-mono text-sm text-muted">{t("guessedIt", { n: show.questions.length })}</p>
         </div>
       ) : (
         <div className="pop glass w-full max-w-sm rounded-3xl p-5">
-          <h2 className="font-display text-2xl font-extrabold">{t("giveUpTitle")}</h2>
+          <h2 className="font-display text-2xl font-bold">{t("giveUpTitle")}</h2>
           {g && g.candidates.length > 0 && (
             <ul className="mt-4 flex flex-col gap-2">
               {g.candidates.map((c, i) => (
@@ -275,7 +276,7 @@ export function Celebrations({ view }: { view: PhaseProps["view"] }) {
           )}
           {g && g.pick >= 0 && <p className="mt-3 font-mono text-xs text-jev">{t("jevPick")}: {g.candidates[g.pick]?.name}</p>}
           <p className="mt-4 text-sm text-muted">{t("wasIt")}</p>
-          <p className="font-display text-3xl font-extrabold text-gold">{show.person}</p>
+          <p className="font-display text-3xl font-bold text-gold">{show.person}</p>
         </div>
       )}
     </div>

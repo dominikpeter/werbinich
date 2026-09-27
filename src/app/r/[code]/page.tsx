@@ -1,11 +1,12 @@
 "use client";
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { api, ApiError, loadIdentity, NAME_KEY, saveIdentity, type Identity } from "@/lib/client";
 import type { View } from "@/lib/game";
 import type { Key } from "@/lib/i18n";
 import { Btn, useLang } from "@/components/ui";
+import { SettingsButton } from "@/components/Settings";
+import { BackButton } from "@/components/Back";
 import { Lobby } from "@/components/Lobby";
 import { Write } from "@/components/Write";
 import { Celebrations, Play } from "@/components/Play";
@@ -61,10 +62,11 @@ export default function RoomPage() {
 
   const Phase = { lobby: Lobby, write: Write, play: Play, end: End }[view.phase];
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-6">
-      <header className="flex items-center justify-between py-3 font-mono text-xs text-muted">
-        <Link href="/">werbinich<span className="text-jev">.ai</span></Link>
+    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col px-4 pb-4">
+      <header className="flex items-center justify-between py-2 font-mono text-sm text-muted">
+        <BackButton view={view} act={act} />
         <span className="tracking-code" data-testid="room-code">{code}</span>
+        <SettingsButton room={code} />
       </header>
       <Celebrations view={view} />
       <Phase view={view} act={act} code={code} id={id} refresh={refresh} />
@@ -92,7 +94,7 @@ function JoinHere({ code, onJoined }: { code: string; onJoined: (id: Identity) =
   return (
     <Center>
       <p className="font-mono tracking-code text-muted">{code}</p>
-      <h1 className="font-display text-4xl font-extrabold">Wer bin ich?</h1>
+      <h1 className="font-display text-4xl font-bold">Wer bin ich?</h1>
       <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("yourName")} aria-label={t("yourName")} maxLength={24} className="glass w-full rounded-2xl px-4 py-3.5 text-lg outline-none" />
       <Btn className="w-full" disabled={!name.trim()} onClick={join}>{t("join")}</Btn>
       {err && <p className="text-sm text-no">{err}</p>}

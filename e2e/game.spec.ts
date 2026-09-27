@@ -124,3 +124,28 @@ test("one phone: pass it for writing, the secret stays covered, voice lines are 
   await expect(page.getByTestId("tree")).toContainText("Ja");
   expect(await hear("nein")).toMatchObject({ did: "chatter" }); // no open question: an answer means nothing
 });
+
+test("the host can call the game off; voice off means typing only", async ({ page }) => {
+  await page.goto("/");
+  await page.getByLabel("Dein Name").fill("Host");
+  await page.getByRole("button", { name: /Ein Handy/ }).click();
+  await page.getByLabel("Name hinzufügen").fill("Gast");
+  await page.getByLabel("Name hinzufügen").press("Enter");
+  await page.getByRole("button", { name: "Los geht's" }).click();
+  await expect(page.getByText("Gib das Handy an")).toBeVisible();
+  await page.getByRole("button", { name: "Zurück" }).click();
+  await page.getByRole("button", { name: /Spiel abbrechen/ }).click();
+  await expect(page.getByRole("button", { name: "Los geht's" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Einstellungen" }).click();
+  await page.getByRole("button", { name: /Aus, nur tippen/ }).click();
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Los geht's" }).click();
+  for (const person of ["Heidi", "Tell"]) {
+    await page.getByRole("button", { name: /^Ich bin/ }).click();
+    await page.getByLabel(/z\. B\./).fill(person);
+    await page.getByRole("button", { name: "Fertig" }).click();
+  }
+  await expect(page.getByRole("textbox", { name: "Frage stellen" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Halten und sprechen" })).toHaveCount(0);
+});

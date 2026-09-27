@@ -1,7 +1,7 @@
 // server side of rooms: load/save with a short lock, who may do what, and where the AI comes in.
 // AI calls run outside the lock (they take ~1 s): check the move on a copy, ask the AI, then apply it for real.
 import * as ai from "./ai";
-import { answer, ask, byId, clean, GameError, giveUp, MAX_PLAYERS, next, pending, start, unlock, viewFor, write, type Answer, type Lang, type Player, type Room } from "./game";
+import { answer, ask, byId, cancel, clean, GameError, giveUp, MAX_PLAYERS, next, pending, start, unlock, viewFor, write, type Answer, type Lang, type Player, type Room } from "./game";
 import type { Store } from "./store";
 
 const TTL = 60 * 60 * 24; // rooms vanish a day after the last move
@@ -75,6 +75,10 @@ function actor(r: Room, pid: unknown, token: unknown, as?: unknown) {
 const hostOnly = (r: Room, me: string) => {
   if (me !== r.host) throw new GameError("not_host", 403);
 };
+/** AI ran outside the lock: its result only lands in the round it was asked for */
+const sameRound = (r: Room, game: number) => {
+  if (r.game !== game) throw new GameError("stale");
+};
 const spend = (r: Room, n: number) => {
   if (r.aiCalls + n > AI_CAP) throw new GameError("ai_limit", 429);
   r.aiCalls += n;
@@ -85,6 +89,7 @@ export type Action =
   | { type: "start" }
   | { type: "again" }
   | { type: "skip" }
+  | { type: "cancel" }
   | { type: "write"; person: string; as?: string }
   | { type: "suggest" }
   | { type: "ask"; text: string; joker?: boolean; voice?: boolean; as?: string }
@@ -113,6 +118,11 @@ export async function act(db: Store, code: string, pid: unknown, token: unknown,
         if (a.type === "start" && r.phase !== "lobby") throw new GameError("started");
         start(r);
       });
+    case "cancel":
+      return mutate(db, code, (r) => {
+        hostOnly(r, me);
+        cancel(r);
+      });
     case "skip":
       return mutate(db, code, (r) => {
         hostOnly(r, me);
@@ -139,10 +149,12 @@ export async function act(db: Store, code: string, pid: unknown, token: unknown,
       if (!p || r.turn !== me || p.status !== "playing" || r.phase !== "play") throw new GameError("not_your_turn");
       if (p.jokers < 1) throw new GameError("no_jokers");
       if (!ai.aiOn()) throw new GameError("no_ai", 503);
+      const round = r.game;
       const questions = await ai.joker(p, r.lang);
       if (!questions.length) throw new GameError("no_ai", 503);
       const best = questions.reduce((b, q, i) => (q.p > questions[b].p ? i : b), 0);
       return mutate(db, code, (r) => {
+        sameRound(r, round);
         spend(r, 2);
         const p = byId(r, me)!;
         if (p.jokers < 1) throw new GameError("no_jokers");
@@ -154,8 +166,10 @@ export async function act(db: Store, code: string, pid: unknown, token: unknown,
     case "giveup": {
       const p = byId(r, me);
       if (!p || r.turn !== me || p.status !== "playing") throw new GameError("not_your_turn");
+      const round = r.game;
       const g = ai.aiOn() ? await ai.giveUpPick(p, r.lang).catch(() => null) : null;
       return mutate(db, code, (r) => {
+        sameRound(r, round);
         if (g) spend(r, 2);
         giveUp(r, me, g ?? { candidates: [], pick: -1 });
       });
@@ -172,7 +186,9 @@ async function askWithJev(db: Store, r: Room, me: string, text: string, opts: { 
   const probe = structuredClone(r);
   const q = ask(probe, me, text, { ...opts, id: id() }); // throws now if it's not their turn, before any AI spend
   const verdict = await (early ?? judge(q.text, byId(r, me)!.person));
-  return mutate(db, r.code, (r) => {
+  return mutate(db, r.code, (next) => {
+    sameRound(next, r.game);
+    r = next;
     if (verdict) spend(r, 1);
     const added = ask(r, me, q.text, { ...opts, id: q.id });
     Object.assign(added, verdict ?? {});
@@ -186,9 +202,11 @@ async function measure(db: Store, code: string, qid: string) {
   const r = await load(db, code);
   const p = r.players.find((p) => p.questions.some((q) => q.id === qid));
   if (!p) return;
+  const round = r.game;
   const w = await ai.warmth(p).catch(() => null);
   if (w === null) return;
   await mutate(db, code, (r) => {
+    if (r.game !== round) return;
     spend(r, 1);
     const q = r.players.flatMap((p) => p.questions).find((q) => q.id === qid);
     if (q) q.warmth = w;
@@ -199,6 +217,9 @@ async function measure(db: Store, code: string, qid: string) {
  * hands-free: one line heard at the table. No open question → it may be the guesser's question (Luna tidies it, Jev
  * decides it is one, in parallel). An open question → Jev decides whether the table said yes, no, or neither.
  */
+// ponytail: a first-person yes/no question as STT writes it in DE/EN/FR; everything else (dialect, fragments) goes through Luna
+const CLEAN_Q = /^(bin|habe|hab|lebe|komme|war|kann|spiele|mache|trage|am|do|did|have|was|can|suis|est-ce|ai|vis|joue)\b[^?]{2,}\?$/i;
+
 export async function hear(db: Store, code: string, pid: unknown, token: unknown, heard: string, later: Later) {
   const r = await load(db, code);
   const me = actor(r, pid, token);
@@ -209,7 +230,8 @@ export async function hear(db: Store, code: string, pid: unknown, token: unknown
   const open = pending(guesser);
   if (!open) {
     // Luna first: raw Swiss German fools a yes/no reading, its clean version doesn't
-    const text = await ai.tidy(line, r.lang).catch(() => line);
+    // already a clean question ("Bin ich …?"): no need for Luna's 1.3 s; Jev below still vetoes chatter
+    const text = CLEAN_Q.test(line) ? line : await ai.tidy(line, r.lang).catch(() => line);
     // is it a question, and Jev's verdict on it, at the same time: a verdict on chatter is thrown away (a tenth of a cent)
     const verdict = text ? judge(text, guesser.person) : Promise.resolve(null);
     const route = await ai.route("ask", line, "", text);

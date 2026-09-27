@@ -22,6 +22,8 @@ OpenRouter (`src/lib/ai.ts`). Same stack and habits as Zettelispiil.
 | `just ai-smoke` | every AI call live against OpenRouter, Swiss German lines included |
 | `just bench-stt` / `just bench-llm` | pick models: accuracy, latency, cost per model |
 | `just pr` | push the branch and open its pull request into `main` |
+| `just release X.Y.Z "notes"` | on `dev`: check, secret scan, bump the version onto the PR; merging it ships (CI deploys to Vercel, tags, writes the GitHub release, builds iOS) |
+| `just vercel-ci-setup` | one-time: the Vercel token for CI's deploy job; the user runs it, it prompts hidden |
 | `just secret NAME` | store a key hidden in `.env.local` and Vercel; the user runs it |
 | `just ios` | sync the iOS shell and open Xcode |
 
@@ -42,6 +44,8 @@ OpenRouter (`src/lib/ai.ts`). Same stack and habits as Zettelispiil.
   run outside the room lock.
 - UI strings live in `src/lib/i18n.ts` in DE (default, Swiss spelling: "ss", never "ß"), EN and FR. Add all three.
 - Icons from lucide-react, no emojis. Colours only through theme tokens in `globals.css` (`@shadcn/lint` rejects raw ones).
-- Work on `dev`; `main` changes through pull requests. A merge into `main` deploys to production (Vercel's GitHub integration).
+- Work on `dev`; `main` changes only through pull requests (ruleset: green `check` + `e2e`, Copilot reviews every push,
+  `.github/copilot-instructions.md`). Vercel posts a preview per PR. A merge carrying a new `package.json` version
+  (`just release`) is the release: CI deploys to Vercel, tags, writes the GitHub release, starts the iOS build.
 - Agents never type, paste, or commit secrets. Don't bypass hooks with `--no-verify`.
 - Player-facing changes: update `docs/MANUAL.md` in the same commit.

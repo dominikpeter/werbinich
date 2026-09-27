@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { answer, ask, derange, giveUp, start, unlock, viewFor, write, type Room } from "./game";
+import { answer, ask, cancel, derange, giveUp, start, unlock, viewFor, write, type Room } from "./game";
 
 const room = (n: number, local = false): Room => ({
   code: "ABCDE", lang: "de", local, host: "p0", phase: "lobby", turn: "", game: 0, aiCalls: 0, updated: 0,
@@ -82,4 +82,12 @@ test("my own person stays hidden from me, never tokens", () => {
   assert.notEqual(v.players[1].person, "");
   assert.ok(v.players.every((p) => !("token" in p)));
   assert.notEqual(viewFor(ready(3, true), "p0").players[0].person, ""); // one phone: the table sees everything
+});
+
+test("cancel sends everyone back to the lobby with nothing left over", () => {
+  const r = ready(3);
+  ask(r, "p0", "Bin ich echt?", { id: "q1" });
+  cancel(r);
+  assert.equal(r.phase, "lobby");
+  assert.ok(r.players.every((p) => !p.person && !p.questions.length && !p.writesFor));
 });
