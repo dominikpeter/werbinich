@@ -54,7 +54,7 @@ export function Tree({ questions, end, person }: { questions: Question[]; end: "
         {questions.map((q) => (
           <li key={q.id} className="rise flex items-start gap-2 pl-16" style={{ height: ROW }}>
             <div className="min-w-0 flex-1 pt-3">
-              <p className="line-clamp-2 text-sm leading-snug">
+              <p className="line-clamp-2 text-base leading-snug">
                 {q.voice && <Mic className="mr-1 inline size-3 text-luna" aria-label="voice" />}
                 {q.joker && <Sparkles className="mr-1 inline size-3 text-jev" aria-label="joker" />}
                 {q.text}

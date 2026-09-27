@@ -1,7 +1,7 @@
 // server side of rooms: load/save with a short lock, who may do what, and where the AI comes in.
 // AI calls run outside the lock (they take ~1 s): check the move on a copy, ask the AI, then apply it for real.
 import * as ai from "./ai";
-import { answer, ask, byId, clean, GameError, giveUp, MAX_PLAYERS, next, pending, start, unlock, viewFor, write, type Answer, type Lang, type Player, type Room } from "./game";
+import { answer, ask, byId, cancel, clean, GameError, giveUp, MAX_PLAYERS, next, pending, start, unlock, viewFor, write, type Answer, type Lang, type Player, type Room } from "./game";
 import type { Store } from "./store";
 
 const TTL = 60 * 60 * 24; // rooms vanish a day after the last move
@@ -85,6 +85,7 @@ export type Action =
   | { type: "start" }
   | { type: "again" }
   | { type: "skip" }
+  | { type: "cancel" }
   | { type: "write"; person: string; as?: string }
   | { type: "suggest" }
   | { type: "ask"; text: string; joker?: boolean; voice?: boolean; as?: string }
@@ -112,6 +113,11 @@ export async function act(db: Store, code: string, pid: unknown, token: unknown,
         hostOnly(r, me);
         if (a.type === "start" && r.phase !== "lobby") throw new GameError("started");
         start(r);
+      });
+    case "cancel":
+      return mutate(db, code, (r) => {
+        hostOnly(r, me);
+        cancel(r);
       });
     case "skip":
       return mutate(db, code, (r) => {
@@ -199,6 +205,9 @@ async function measure(db: Store, code: string, qid: string) {
  * hands-free: one line heard at the table. No open question → it may be the guesser's question (Luna tidies it, Jev
  * decides it is one, in parallel). An open question → Jev decides whether the table said yes, no, or neither.
  */
+// ponytail: a first-person yes/no question as STT writes it in DE/EN/FR; everything else (dialect, fragments) goes through Luna
+const CLEAN_Q = /^(bin|habe|hab|lebe|komme|war|kann|spiele|mache|trage|am|do|did|have|was|can|suis|est-ce|ai|vis|joue)\b[^?]{2,}\?$/i;
+
 export async function hear(db: Store, code: string, pid: unknown, token: unknown, heard: string, later: Later) {
   const r = await load(db, code);
   const me = actor(r, pid, token);
@@ -209,7 +218,8 @@ export async function hear(db: Store, code: string, pid: unknown, token: unknown
   const open = pending(guesser);
   if (!open) {
     // Luna first: raw Swiss German fools a yes/no reading, its clean version doesn't
-    const text = await ai.tidy(line, r.lang).catch(() => line);
+    // already a clean question ("Bin ich …?"): no need for Luna's 1.3 s; Jev below still vetoes chatter
+    const text = CLEAN_Q.test(line) ? line : await ai.tidy(line, r.lang).catch(() => line);
     // is it a question, and Jev's verdict on it, at the same time: a verdict on chatter is thrown away (a tenth of a cent)
     const verdict = text ? judge(text, guesser.person) : Promise.resolve(null);
     const route = await ai.route("ask", line, "", text);

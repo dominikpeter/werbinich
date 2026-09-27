@@ -1,11 +1,12 @@
 "use client";
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { api, ApiError, loadIdentity, NAME_KEY, saveIdentity, type Identity } from "@/lib/client";
 import type { View } from "@/lib/game";
 import type { Key } from "@/lib/i18n";
 import { Btn, useLang } from "@/components/ui";
+import { SettingsButton } from "@/components/Settings";
+import { BackButton } from "@/components/Back";
 import { Lobby } from "@/components/Lobby";
 import { Write } from "@/components/Write";
 import { Celebrations, Play } from "@/components/Play";
@@ -61,10 +62,11 @@ export default function RoomPage() {
 
   const Phase = { lobby: Lobby, write: Write, play: Play, end: End }[view.phase];
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-6">
-      <header className="flex items-center justify-between py-3 font-mono text-xs text-muted">
-        <Link href="/">werbinich<span className="text-jev">.ai</span></Link>
+    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col px-4 pb-4">
+      <header className="flex items-center justify-between py-2 font-mono text-sm text-muted">
+        <BackButton view={view} act={act} />
         <span className="tracking-code" data-testid="room-code">{code}</span>
+        <SettingsButton room={code} />
       </header>
       <Celebrations view={view} />
       <Phase view={view} act={act} code={code} id={id} refresh={refresh} />

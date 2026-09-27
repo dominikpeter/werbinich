@@ -159,6 +159,13 @@ export function next(r: Room) {
   r.turn = "";
 }
 
+/** the host calls the game off: everyone back to the lobby, persons and questions gone */
+export function cancel(r: Room) {
+  r.players.forEach((p) => Object.assign(p, fresh(), { writesFor: "" }));
+  r.phase = "lobby";
+  r.turn = "";
+}
+
 /** the writer (or, in a one-phone game, the host) turns the card face up for everyone */
 export function unlock(r: Room, by: string, target: string) {
   const t = byId(r, target);

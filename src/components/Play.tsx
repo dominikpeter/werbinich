@@ -5,7 +5,7 @@ import type { PhaseProps } from "@/app/r/[code]/page";
 import type { Joker, ViewPlayer } from "@/lib/game";
 import { useListener, type Clip } from "@/lib/listen";
 import { Tree } from "./Tree";
-import { Btn, useLang, Warmth } from "./ui";
+import { Btn, useLang, useVoice, Warmth } from "./ui";
 
 type Heard = { text: string; did: string };
 
@@ -34,7 +34,8 @@ export function Play({ view, act, code, id, refresh }: PhaseProps) {
   };
   // the mic opens on first use (hands-free or a press) and stays open; only detected speech ever leaves the phone
   const [micOn, setMicOn] = useState(false);
-  const ear = useListener(view.ai && iAsk && micOn, handsFree, onClip);
+  const voice = useVoice() && view.ai; // voice switched off in the settings: the mic never opens, questions are typed
+  const ear = useListener(voice && iAsk && micOn, handsFree, onClip);
 
   // ---- typed fallback, joker, give-up ----
   const [typing, setTyping] = useState(!view.ai);
@@ -62,7 +63,7 @@ export function Play({ view, act, code, id, refresh }: PhaseProps) {
       <section className="rise flex items-end justify-between gap-3">
         <div>
           <p className="text-xs font-semibold tracking-wider text-muted uppercase">{view.me === view.turn && !view.local ? t("yourTurn") : t("turnOf", { name: guesser.name })}</p>
-          <h1 className="font-display text-3xl font-bold" data-testid="guesser">{guesser.name}</h1>
+          <h1 className="text-4xl font-bold tracking-tight" data-testid="guesser">{guesser.name}</h1>
         </div>
         {iAnswer && guesser.person && <PersonCard person={guesser.person} hideFrom={view.local ? guesser.name : ""} jev={view.local && open?.truth !== undefined ? `${t("jevSays")}: ${open.truth >= 0.5 ? t("yes") : t("no")} ${Math.round(Math.max(open.truth, 1 - open.truth) * 100)}%` : ""} />}
       </section>
@@ -77,14 +78,14 @@ export function Play({ view, act, code, id, refresh }: PhaseProps) {
       {/* the table's side: the open question, Jev's quiet opinion, the answer */}
       {iAnswer && open && (
         <section className="pop glass glow-jev rounded-3xl p-4" data-testid="answer-panel">
-          <p className="font-display text-xl font-bold">{open.text}</p>
+          <p className="text-2xl leading-tight font-bold">{open.text}</p>
           {open.truth !== undefined && !view.local && (
             <p className="mt-1 font-mono text-xs text-jev">
               {t("jevSays")}: {open.truth >= 0.5 ? t("yes") : t("no")} · {Math.round(Math.max(open.truth, 1 - open.truth) * 100)}%
               {(open.guess ?? 0) > 0.5 && <> · <Star className="inline size-3" /> {t("solved")}?</>}
             </p>
           )}
-          <div className="mt-3 grid grid-cols-3 gap-2">
+          <div className="mt-4 grid grid-cols-3 gap-2 [&>button]:min-h-16 [&>button]:text-lg">
             <Btn tone="yes" onClick={() => act({ type: "answer", qid: open.id, answer: "yes" })}>{t("yes")}</Btn>
             <Btn tone="no" onClick={() => act({ type: "answer", qid: open.id, answer: "no" })}>{t("no")}</Btn>
             <Btn tone="gold" onClick={() => act({ type: "answer", qid: open.id, answer: "yes", solved: true })}>{t("solved")}</Btn>
@@ -102,7 +103,7 @@ export function Play({ view, act, code, id, refresh }: PhaseProps) {
             </p>
           )}
           {ear.error && <p className="text-center text-xs text-no">{t("micDenied")}</p>}
-          {typing || !view.ai || ear.error ? (
+          {typing || !voice || ear.error ? (
             <form onSubmit={(e) => (e.preventDefault(), ask(text))} className="flex gap-2">
               <input value={text} onChange={(e) => setText(e.target.value)} disabled={!!open} placeholder={t("askPh")} aria-label={t("ask")} maxLength={200} className="glass w-0 flex-1 rounded-2xl px-4 py-3 outline-none disabled:opacity-40" />
               <Btn type="submit" disabled={!!open || !text.trim()}>{t("send")}</Btn>
@@ -116,7 +117,7 @@ export function Play({ view, act, code, id, refresh }: PhaseProps) {
             </div>
           )}
           <div className="flex items-center justify-between gap-2">
-            {view.ai && (
+            {voice && (
               <button onClick={() => setTyping((x) => !x)} className="rounded-xl p-2 text-muted" aria-label="keyboard">
                 {typing ? <Mic className="size-5" /> : <Keyboard className="size-5" />}
               </button>
@@ -164,10 +165,10 @@ function MicButton({ ear, busy, handsFree, label, onFirst }: { ear: ReturnType<t
         onPointerLeave={end}
         onContextMenu={(e) => e.preventDefault()}
         aria-label={label}
-        className={`mic-ring grid size-20 touch-none place-items-center rounded-full transition select-none disabled:opacity-40 ${down || (handsFree && ear.speaking) ? "scale-110 bg-luna text-canvas" : handsFree ? "bg-raised text-luna" : "bg-ink text-canvas"}`}
+        className={`mic-ring grid size-24 touch-none place-items-center rounded-full transition select-none disabled:opacity-40 ${down || (handsFree && ear.speaking) ? "scale-110 bg-luna text-canvas" : handsFree ? "bg-raised text-luna" : "bg-ink text-canvas"}`}
         style={{ "--level": handsFree || down ? ear.level : 0 } as React.CSSProperties}
       >
-        {busy ? <span className="size-6 animate-spin rounded-full border-2 border-current border-t-transparent" /> : <Mic className="size-8" />}
+        {busy ? <span className="size-6 animate-spin rounded-full border-2 border-current border-t-transparent" /> : <Mic className="size-10" />}
       </button>
       <span className="font-mono text-xs text-muted">{busy ? t("thinking") : label}</span>
     </div>

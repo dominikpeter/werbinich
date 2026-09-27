@@ -1,7 +1,7 @@
 "use client";
 import { useSyncExternalStore } from "react";
 import { getLang, LANG_KEY } from "@/lib/client";
-import { LANGS, tr, type Lang } from "@/lib/i18n";
+import { tr, type Lang } from "@/lib/i18n";
 
 // the language lives in localStorage; every component reads it through this hook and re-renders when it changes
 const subs = new Set<() => void>();
@@ -17,18 +17,22 @@ export function useLang() {
   return { lang, t: tr(lang) };
 }
 
-export function LangSwitch() {
-  const { lang } = useLang();
-  return (
-    <div className="flex gap-1 rounded-full glass p-1 text-xs font-semibold uppercase">
-      {LANGS.map((l) => (
-        <button key={l} onClick={() => setLang(l)} className={`rounded-full px-2.5 py-1 transition ${l === lang ? "bg-ink text-canvas" : "text-muted"}`} aria-pressed={l === lang}>
-          {l}
-        </button>
-      ))}
-    </div>
-  );
+// voice on/off, per phone: off means the mic never opens and questions are typed
+const VOICE_KEY = "werbinich:voice";
+const getVoice = () => {
+  try {
+    return localStorage.getItem(VOICE_KEY) !== "off";
+  } catch {
+    return true;
+  }
+};
+export function setVoice(on: boolean) {
+  try {
+    localStorage.setItem(VOICE_KEY, on ? "on" : "off");
+  } catch {}
+  subs.forEach((f) => f());
 }
+export const useVoice = () => useSyncExternalStore((f) => (subs.add(f), () => subs.delete(f)), getVoice, () => true);
 
 type Tone = "ink" | "yes" | "no" | "gold" | "jev" | "ghost";
 const TONES: Record<Tone, string> = {
