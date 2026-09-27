@@ -33,9 +33,9 @@ check: lint typecheck test
 e2e *args:
     npx playwright test --workers=2 {{args}}
 
-# e2e against the live site
+# e2e against the live site with real AI (the specs that need no canned answers)
 e2e-prod *args:
-    BASE_URL=https://werbinich.vercel.app npx playwright test --workers=2 {{args}}
+    BASE_URL=https://werbinich-psi.vercel.app npx playwright test --workers=2 -g "tokens|one phone" {{args}}
 
 # live check of every AI call (Jev, Luna, Swiss German routing) against OpenRouter; well under a cent
 ai-smoke:
