@@ -1,0 +1,43 @@
+name: CI
+
+# Work happens on dev and reaches main by pull request. Every push to dev/main and every PR: lint, typecheck, unit tests,
+# e2e on Android Chrome + iPhone WebKit (the same `just check` / `just e2e` a laptop runs). Deploys are Vercel's own
+# GitHub integration: a PR gets a preview, a merge into main goes to production.
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with: { node-version: 22, cache: npm }
+      - uses: extractions/setup-just@v4
+      - run: npm ci
+      - run: just check
+
+  e2e:
+    needs: check
+    # ponytail: pinned, Playwright's --with-deps tends to lag a new Ubuntu; bump once it supports it
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with: { node-version: 22, cache: npm }
+      - uses: extractions/setup-just@v4
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium webkit
+      - run: just e2e
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with: { name: playwright-report, path: playwright-report/, retention-days: 7 }

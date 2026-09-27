@@ -1,0 +1,123 @@
+@import "tailwindcss";
+
+@custom-variant short (@media (max-height: 700px));
+
+/* one dark theme: an interrogation room. yes = mint, no = coral, solved = gold, Jev = violet, Luna = cyan */
+@theme {
+  --color-canvas: #0b0a12;
+  --color-surface: #15131f;
+  --color-raised: #1f1c2c;
+  --color-line: #2e2a40;
+  --color-ink: #f4f1ff;
+  --color-muted: #9a94b5;
+  --color-yes: #3dffb5;
+  --color-yes-ink: #04291b;
+  --color-no: #ff5b6e;
+  --color-no-ink: #2e0409;
+  --color-gold: #ffd84d;
+  --color-gold-ink: #2b2100;
+  --color-jev: #a58bff;
+  --color-luna: #56d9ff;
+  --color-cold: #5b8cff;
+  --color-hot: #ff7a3d;
+
+  --tracking-code: 0.3em; /* room codes, read aloud across the table */
+  --text-2xs: 0.65rem;
+  --container-card: 55%;
+
+  --font-sans: var(--font-grotesk);
+  --font-display: var(--font-syne);
+  --font-mono: var(--font-jet);
+  --ease-spring: cubic-bezier(0.2, 0.9, 0.3, 1.25);
+}
+
+html {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  color-scheme: dark;
+}
+
+/* the spotlight over the table, and a faint grain so the dark isn't flat */
+body {
+  background:
+    radial-gradient(ellipse 80% 55% at 50% -10%, color-mix(in oklch, var(--color-jev) 22%, transparent), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 100% 110%, color-mix(in oklch, var(--color-luna) 10%, transparent), transparent 70%),
+    var(--color-canvas);
+  background-attachment: fixed;
+}
+
+.glass {
+  background: color-mix(in oklch, var(--color-surface) 82%, transparent);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--color-line);
+}
+
+.glow-jev {
+  box-shadow: 0 0 0 1px color-mix(in oklch, var(--color-jev) 50%, transparent), 0 10px 40px -10px color-mix(in oklch, var(--color-jev) 60%, transparent);
+}
+.glow-gold {
+  box-shadow: 0 0 0 1px var(--color-gold), 0 12px 50px -12px var(--color-gold);
+}
+
+/* the card flip at the end: a locked card turns face up */
+.flip {
+  perspective: 900px;
+}
+.flip > .inner {
+  transition: transform 700ms var(--ease-spring);
+  transform-style: preserve-3d;
+  display: grid;
+}
+.flip.open > .inner {
+  transform: rotateY(180deg);
+}
+.flip .face {
+  grid-area: 1 / 1;
+  backface-visibility: hidden;
+}
+.flip .back {
+  transform: rotateY(180deg);
+}
+
+@keyframes pop {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+.pop {
+  animation: pop 420ms var(--ease-spring) both;
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+}
+.rise {
+  animation: rise 380ms ease-out both;
+}
+
+/* the mic ring pulses with the voice level (--level set from the analyser, 0..1) */
+.mic-ring {
+  box-shadow: 0 0 0 calc(4px + var(--level, 0) * 26px) color-mix(in oklch, var(--color-luna) 28%, transparent);
+  transition: box-shadow 80ms linear;
+}
+
+@keyframes float {
+  50% {
+    transform: translateY(-10px) rotate(var(--r, 0deg));
+  }
+}
+.float {
+  animation: float 5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  .flip > .inner {
+    animation: none !important;
+    transition: none !important;
+  }
+}
