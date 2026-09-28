@@ -40,7 +40,7 @@ export default function RoomPage() {
       setView(v);
       setErr("");
     } catch (e) {
-      setErr(e instanceof ApiError ? e.message : "offline");
+      if (n >= seq.current.shown) setErr(e instanceof ApiError ? e.message : "offline"); // an obsolete poll's failure isn't news
     }
   }, [code, id]);
 

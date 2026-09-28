@@ -27,7 +27,7 @@ export function Tree({ questions, end, person }: { questions: Question[]; end: "
             <div className="min-w-0 flex-1 pt-1">
               <p className="text-lg leading-snug">
                 {q.text}
-                {q.voice && <Mic className="ml-1.5 inline size-3.5 text-muted" aria-label="voice" />}
+                {q.voice && <Mic className="ml-1.5 inline size-3.5 text-muted" aria-label={t("voice")} />}
                 {q.joker && <Sparkles className="ml-1.5 inline size-3.5 text-jev" aria-label={t("joker")} />}
               </p>
               {q.warmth !== undefined && (

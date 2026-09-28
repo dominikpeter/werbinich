@@ -13,7 +13,7 @@ const asker = async (pages: Page[]) => {
 /** the mic is the default with AI on; the keyboard is one tap away */
 async function typeQ(p: Page, q: string) {
   const box = p.getByRole("textbox", { name: "Frage stellen" });
-  if (!(await box.isVisible())) await p.getByRole("button", { name: "keyboard" }).click();
+  if (!(await box.isVisible())) await p.getByRole("button", { name: "Tippen" }).click();
   await box.fill(q);
   await p.getByRole("button", { name: "Fragen" }).click();
 }

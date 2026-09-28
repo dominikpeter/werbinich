@@ -5,7 +5,7 @@
 - **Ein Handy**: Namen eintippen, das Handy wird herumgegeben.
 
 ## Als App
-Nach dem ersten Spiel bietet die Startseite an, «Wer bin ich?» auf den Home-Bildschirm zu legen: auf Android mit
+Nach dem ersten fertig gespielten Spiel bietet die Startseite an, «Wer bin ich?» auf den Home-Bildschirm zu legen: auf Android mit
 **Installieren**, auf dem iPhone über «Teilen» → «Zum Home-Bildschirm». Dann startet es im Vollbild.
 
 ## Einstellungen (Zahnrad oben rechts)
@@ -24,7 +24,7 @@ oder Figur auf. "Luna, schlag was vor" hilft. Mit einem Handy: "Gib das Handy an
 
 ## Der Zettel
 Oben steht der Zettel auf der Stirn: die anderen sehen darauf die Person, wer fragt nur ein «?». Auf einem gemeinsamen
-Handy ist er zugedeckt, bis jemand ihn gedrückt hält. Unten am Zettel läuft die **Jev-Wärme** mit.
+Handy ist er zugedeckt, bis jemand ihn gedrückt hält (oder mit der Tastatur: Leertaste halten). Unten am Zettel läuft die **Jev-Wärme** mit.
 
 ## Fragen
 - Wer dran ist, fragt mit Ja/Nein: **halten und sprechen**, **freihändig** (das Handy hört zu und erkennt Fragen und

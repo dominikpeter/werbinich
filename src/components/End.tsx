@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { markPlayed } from "@/lib/client";
 import { Lock, RotateCcw, Sparkles, Star } from "lucide-react";
 import type { PhaseProps } from "@/app/r/[code]/page";
 import { Tree } from "./Tree";
@@ -11,6 +12,7 @@ export function End({ view, act }: PhaseProps) {
   const ranked = [...view.players].sort((a, b) => (a.place || 99) - (b.place || 99) || a.questions.length - b.questions.length);
   const [pick, setPick] = useState(ranked[0]?.id ?? "");
   const chosen = view.players.find((p) => p.id === pick);
+  useEffect(markPlayed, []); // a finished game: from now on the home page may offer the app
 
   return (
     <div className="flex flex-1 flex-col gap-4">

@@ -124,8 +124,8 @@ export function Play({ view, act, code, id, refresh }: PhaseProps) {
               <>
                 <Wave level={ear.level} active={ear.speaking || busy} />
                 <div className="flex items-center justify-between">
-                  <button onClick={() => setTyping(true)} className="flex w-20 flex-col items-center gap-1 rounded-2xl py-1 text-sm text-muted" aria-label="keyboard">
-                    <Keyboard className="size-6" /> {t("type")}
+                  <button onClick={() => (setTyping(true), setHandsFree(false), setMicOn(false))} className="flex w-20 flex-col items-center gap-1 rounded-2xl py-1 text-sm text-muted">
+                    <Keyboard className="size-6" aria-hidden /> {t("type")}
                   </button>
                   <MicButton ear={ear} busy={busy} handsFree={handsFree} onFirst={() => setMicOn(true)} />
                   <button onClick={() => (setMicOn(true), setHandsFree((h) => !h))} aria-pressed={handsFree} className={`flex w-20 flex-col items-center gap-1 rounded-2xl py-1 text-sm transition ${handsFree ? "text-luna" : "text-muted"}`}>
@@ -184,7 +184,21 @@ function Note({ person, coverFor, writer, warmth, open }: { person: string; cove
   const { t } = useLang();
   const [peek, setPeek] = useState(false);
   const covered = !!coverFor && !peek;
-  const hold = coverFor ? { onPointerDown: () => setPeek(true), onPointerUp: () => setPeek(false), onPointerLeave: () => setPeek(false), onContextMenu: (e: React.MouseEvent) => e.preventDefault() } : {};
+  // held with a finger, or with Space/Enter from a keyboard or switch control
+  const hold = coverFor
+    ? {
+        role: "button",
+        tabIndex: 0,
+        "aria-pressed": peek,
+        onPointerDown: () => setPeek(true),
+        onPointerUp: () => setPeek(false),
+        onPointerLeave: () => setPeek(false),
+        onKeyDown: (e: React.KeyboardEvent) => (e.key === " " || e.key === "Enter") && (e.preventDefault(), setPeek(true)),
+        onKeyUp: () => setPeek(false),
+        onBlur: () => setPeek(false),
+        onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
+      }
+    : {};
   const pct = Math.round(warmth * 100);
   return (
     <div {...hold} className={`note relative -rotate-1 rounded-md px-5 pt-4 pb-3 text-gold-ink select-none ${coverFor ? "touch-none" : ""}`}>
