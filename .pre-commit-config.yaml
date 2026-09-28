@@ -25,8 +25,9 @@ repos:
     hooks:
       - id: no-secrets
         name: no API keys
-        # a commit: the staged lines; CI (no staged diff there): every tracked file of the checkout
-        entry: bash -c 'p="sk-(or-v1-|proj-)?[A-Za-z0-9_-]{20,}|vcp_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}"; if [ -n "${CI:-}" ]; then ! git grep -nE "$p"; else ! git diff --cached -U0 | grep -E "^\+.*($p)"; fi'
+        # a commit: the staged lines; CI (no staged diff there): every tracked file. --no-pager: prek gives hooks a terminal
+        # when colouring, and git would then open less and wait for a key forever
+        entry: bash -c 'p="sk-(or-v1-|proj-)?[A-Za-z0-9_-]{20,}|vcp_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}"; if [ -n "${CI:-}" ]; then ! git --no-pager grep -nE "$p"; else ! git --no-pager diff --cached -U0 | grep -E "^\+.*($p)"; fi'
         language: system
         pass_filenames: false
       - id: no-env-files
