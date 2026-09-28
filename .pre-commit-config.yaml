@@ -25,7 +25,8 @@ repos:
     hooks:
       - id: no-secrets
         name: no API keys
-        entry: bash -c '! git diff --cached -U0 | grep -E "^\+.*(sk-(or-v1-|proj-)?[A-Za-z0-9_-]{20,}|vcp_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16})"'
+        # a commit: the staged lines; CI (no staged diff there): every tracked file of the checkout
+        entry: bash -c 'p="sk-(or-v1-|proj-)?[A-Za-z0-9_-]{20,}|vcp_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}"; if [ -n "${CI:-}" ]; then ! git grep -nE "$p"; else ! git diff --cached -U0 | grep -E "^\+.*($p)"; fi'
         language: system
         pass_filenames: false
       - id: no-env-files
@@ -41,7 +42,8 @@ repos:
         exclude: ^src/lib/ai\.ts$ # it tells the model not to use ß
       - id: actionlint
         name: GitHub workflows (actionlint)
-        entry: actionlint
+        # a laptop without it gets a note, not a blocked commit; CI installs it and enforces the check
+        entry: bash -c 'command -v actionlint >/dev/null || { echo "actionlint not installed (brew install actionlint); CI checks the workflows"; exit 0; }; actionlint "$@"' --
         language: system
         files: ^\.github/workflows/.*\.ya?ml$
       - id: lint

@@ -65,7 +65,8 @@ test("a room of two: the whole game with joker, solve, give-up and reveal", asyn
   await p.getByRole("button", { name: /Joker/ }).click();
   await expect(p.getByTestId("joker")).toContainText("Lebe ich noch?");
   await p.getByTestId("joker").getByRole("button", { name: /Lebe ich noch/ }).click();
-  await expect(p.getByRole("button", { name: /1 übrig/ })).toBeVisible();
+  await expect(p.getByTestId("tree").getByLabel("Joker")).toBeVisible(); // the path marks a joker question
+  await expect(table.getByTestId("answer-panel")).toContainText("Lebe ich noch?");
   await table.getByRole("button", { name: "Nein", exact: true }).click();
 
   // "no" passed the turn: Beni asks now and guesses right; a yes to a Jev-recognised guess solves it

@@ -51,6 +51,17 @@ bench-stt:
     set -a; source .env.local; set +a
     npx tsx scripts/bench-stt.mts
 
+# Swiss German end to end (TTS dialect voices -> STT -> Luna -> Jev), every STT model with and without language=de
+bench-swiss:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    set -a; source .env.local; set +a
+    npx tsx scripts/bench-swiss.mts
+
+# every git hook on every file (what CI's check job runs)
+hooks:
+    prek run --all-files --skip no-commit-to-branch
+
 # benchmark chat models for the joker and give-up (quality, latency, cost); MODELS=a,b to pick
 bench-llm:
     #!/usr/bin/env bash

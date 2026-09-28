@@ -1,6 +1,6 @@
 "use client";
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ApiError, loadIdentity, NAME_KEY, saveIdentity, type Identity } from "@/lib/client";
 import type { View } from "@/lib/game";
 import type { Key } from "@/lib/i18n";
@@ -28,10 +28,16 @@ export default function RoomPage() {
   // identity comes from localStorage, which only exists after mount
   useEffect(() => setId(loadIdentity(code)), [code]); // eslint-disable-line react-hooks/set-state-in-effect
 
+  // polls and post-move refreshes overlap: a slow older answer must never overwrite a newer one
+  const seq = useRef({ sent: 0, shown: 0 });
   const refresh = useCallback(async () => {
     if (!id) return;
+    const n = ++seq.current.sent;
     try {
-      setView(await api<RoomView>(`/${code}`, undefined, id));
+      const v = await api<RoomView>(`/${code}`, undefined, id);
+      if (n < seq.current.shown) return;
+      seq.current.shown = n;
+      setView(v);
       setErr("");
     } catch (e) {
       setErr(e instanceof ApiError ? e.message : "offline");

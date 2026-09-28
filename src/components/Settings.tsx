@@ -18,7 +18,7 @@ export function SettingsButton({ room }: { room?: string }) {
       <button onClick={() => ref.current?.showModal()} aria-label={t("settings")} className="grid size-11 place-items-center rounded-full glass text-muted transition active:scale-90">
         <Gear className="size-5" />
       </button>
-      <Sheet ref={ref}>
+      <Sheet ref={ref} label={t("settings")}>
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold">{t("settings")}</h2>
             <button onClick={() => ref.current?.close()} aria-label={t("close")} className="grid size-10 place-items-center rounded-full text-muted"><X className="size-5" aria-hidden /></button>

@@ -32,7 +32,8 @@ jobs:
         with: { install-only: true }
       - name: actionlint (for the workflow hook)
         run: |
-          bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash) latest "$RUNNER_TEMP"
+          # pinned: the release's own download script and binary, not whatever `main`/`latest` point at today
+          bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.12/scripts/download-actionlint.bash) 1.7.12 "$RUNNER_TEMP"
           echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
       - run: prek run --all-files --show-diff-on-failure --color=always
         env: { SKIP: no-commit-to-branch } # CI checks main itself after a merge; the branch rule is for laptops

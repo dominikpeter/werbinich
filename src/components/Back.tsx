@@ -19,7 +19,7 @@ export function BackButton({ view, act }: { view: RoomView; act: Act }) {
       <button onClick={() => (safe ? router.push("/") : ref.current?.showModal())} aria-label={t("back")} className="grid size-11 place-items-center rounded-full glass text-muted transition active:scale-90">
         <ArrowLeft className="size-5" />
       </button>
-      <Sheet ref={ref}>
+      <Sheet ref={ref} label={t("leaveConfirm")}>
         <h2 className="mb-2 text-2xl font-bold">{t("leaveConfirm")}</h2>
         <button onClick={() => ref.current?.close()} className={`${row} bg-ink text-canvas`}>
           <span className="flex items-center gap-2 font-semibold"><Play className="size-4" /> {t("resume")}</span>

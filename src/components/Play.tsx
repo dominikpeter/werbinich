@@ -92,7 +92,7 @@ export function Play({ view, act, code, id, refresh }: PhaseProps) {
       {/* the dock: whatever this phone does next, in thumb reach */}
       <section className="glass -mx-4 -mb-4 flex flex-col gap-3 rounded-t-3xl px-4 pt-4 pb-4">
         {iAnswer && open ? (
-          <div className="pop flex flex-col gap-3" data-testid="answer-panel">
+          <div className="flex flex-col gap-3" data-testid="answer-panel">
             <p className="text-2xl leading-tight font-bold text-balance">{open.text}</p>
             {open.truth !== undefined && !view.local && <JevChip truth={open.truth} guess={open.guess ?? 0} />}
             {handsFree && <Wave level={ear.level} active={ear.speaking} />}
@@ -242,15 +242,21 @@ function MicButton({ ear, busy, handsFree, onFirst }: { ear: ReturnType<typeof u
 function JokerSheet({ joker, onClose, onAsk }: { joker: Joker; onClose: () => void; onAsk: (q: string) => void }) {
   const { t } = useLang();
   const ref = useRef<HTMLDialogElement>(null);
+  const closed = useRef(onClose);
+  useEffect(() => {
+    closed.current = onClose;
+  });
+  // once on mount: onClose is a new function every poll, the dialog must not be reopened for it (old Safari throws)
   useEffect(() => {
     const d = ref.current;
-    d?.showModal();
-    d?.addEventListener("close", onClose);
-    return () => d?.removeEventListener("close", onClose);
-  }, [onClose]);
+    if (d && !d.open) d.showModal();
+    const done = () => closed.current();
+    d?.addEventListener("close", done);
+    return () => d?.removeEventListener("close", done);
+  }, []);
   const max = Math.max(...joker.questions.map((q) => q.p), 0.01);
   return (
-    <Sheet ref={ref} testId="joker">
+    <Sheet ref={ref} label={t("jokerTitle")} testId="joker">
       <div className="flex items-start justify-between">
         <h2 className="text-2xl font-bold"><span className="text-luna">Luna</span> × <span className="text-jev">Jev</span></h2>
         <button onClick={() => ref.current?.close()} aria-label={t("close")} className="grid size-10 place-items-center rounded-full text-muted"><X className="size-5" aria-hidden /></button>
@@ -298,16 +304,18 @@ export function Celebrations({ view }: { view: PhaseProps["view"] }) {
   if (!show) return null;
   const g = show.giveUp;
   return (
-    <button type="button" aria-label={t("close")} className="fixed inset-0 z-30 grid place-items-center bg-canvas/80 p-6 text-left backdrop-blur" onClick={() => setShow(null)} data-testid="celebration" aria-live="polite">
+    // a tap anywhere closes it; the content stays readable (a button's label would hide it from screen readers)
+    <div role="dialog" aria-modal="true" aria-label={show.name} className="fixed inset-0 z-30 grid place-items-center bg-canvas/80 p-6 backdrop-blur" data-testid="celebration">
+      <button type="button" aria-label={t("close")} className="absolute inset-0" onClick={() => setShow(null)} />
       {show.status === "solved" ? (
-        <div className="pop flex flex-col items-center gap-3 text-center">
+        <div className="pop pointer-events-none relative flex flex-col items-center gap-3 text-center">
           <Star className="size-20 text-gold" fill="currentColor" />
           <p className="font-display text-2xl font-bold">{show.name}</p>
           <p className="glow-gold rounded-2xl bg-gold px-6 py-3 font-display text-4xl font-bold text-gold-ink">{show.person}</p>
           <p className="font-mono text-sm text-muted">{t("guessedIt", { n: show.questions.length })}</p>
         </div>
       ) : (
-        <div className="pop glass w-full max-w-sm rounded-3xl p-5">
+        <div className="pop glass pointer-events-none relative w-full max-w-sm rounded-3xl p-5">
           <h2 className="font-display text-2xl font-bold">{t("giveUpTitle")}</h2>
           {g && g.candidates.length > 0 && (
             <ul className="mt-4 flex flex-col gap-2">
@@ -327,6 +335,6 @@ export function Celebrations({ view }: { view: PhaseProps["view"] }) {
           <p className="font-display text-3xl font-bold text-gold">{show.person}</p>
         </div>
       )}
-    </button>
+    </div>
   );
 }

@@ -2,10 +2,11 @@
 import { forwardRef } from "react";
 
 /** a bottom sheet on a native <dialog>: Escape and a tap outside close it, focus stays inside while open */
-export const Sheet = forwardRef<HTMLDialogElement, { children: React.ReactNode; testId?: string }>(function Sheet({ children, testId }, ref) {
+export const Sheet = forwardRef<HTMLDialogElement, { children: React.ReactNode; label: string; testId?: string }>(function Sheet({ children, label, testId }, ref) {
   return (
     <dialog
       ref={ref}
+      aria-label={label}
       data-testid={testId}
       onClick={(e) => e.target === e.currentTarget && e.currentTarget.close()}
       className="m-0 mt-auto w-full max-w-none bg-transparent p-0 text-ink backdrop:bg-canvas/70 backdrop:backdrop-blur-sm"
