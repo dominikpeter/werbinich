@@ -47,7 +47,7 @@ export function Btn({ tone = "ink", className = "", ...p }: React.ButtonHTMLAttr
   return (
     <button
       {...p}
-      className={`inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3.5 font-semibold transition active:scale-95 disabled:opacity-40 disabled:active:scale-100 ${TONES[tone]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3.5 font-semibold transition hover:brightness-110 active:scale-95 disabled:opacity-40 disabled:active:scale-100 ${TONES[tone]} ${className}`}
     />
   );
 }

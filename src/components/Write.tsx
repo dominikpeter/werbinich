@@ -51,23 +51,39 @@ function Form({ target, onDone, act }: { target: string; onDone: (p: string) => 
     }
   };
   return (
-    <form className="flex flex-1 flex-col gap-4" onSubmit={(e) => (e.preventDefault(), person.trim() && onDone(person))}>
-      <h1 className="rise mt-6 font-display text-4xl leading-tight font-bold">{t("writeFor", { name: target })}</h1>
-      <p className="text-sm text-muted">{t("writeHint", { name: target })}</p>
-      <input autoFocus value={person} onChange={(e) => setPerson(e.target.value)} placeholder={t("personPh")} aria-label={t("personPh")} maxLength={60} className="glass rounded-2xl px-4 py-4 text-xl outline-none focus:border-gold" />
-      <button type="button" onClick={suggest} disabled={busy} className="flex items-center gap-2 self-start rounded-full px-3 py-1.5 text-sm text-luna transition active:scale-95 disabled:opacity-50">
-        <Sparkles className={`size-4 ${busy ? "animate-spin" : ""}`} /> {t("suggest")}
+    <form className="flex flex-1 flex-col gap-5" onSubmit={(e) => (e.preventDefault(), person.trim() && onDone(person))}>
+      <div className="rise mt-4">
+        <h1 className="text-4xl leading-tight font-bold text-balance">{t("writeFor", { name: target })}</h1>
+        <p className="mt-2 text-muted">{t("writeHint", { name: target })}</p>
+      </div>
+      {/* you write on the note that goes on their forehead */}
+      <label className="note relative mt-2 block -rotate-1 rounded-md px-5 pt-6 pb-5">
+        <span className="tape" aria-hidden />
+        <input
+          value={person}
+          name="person"
+          autoComplete="off"
+          onChange={(e) => setPerson(e.target.value)}
+          placeholder={t("personPh")}
+          aria-label={t("personPh")}
+          maxLength={60}
+          enterKeyHint="done"
+          className="w-full bg-transparent text-3xl font-bold text-gold-ink outline-none placeholder:text-gold-ink/35"
+        />
+      </label>
+      <button type="button" onClick={suggest} disabled={busy} className="glass flex min-h-14 items-center justify-center gap-2.5 rounded-2xl text-lg font-semibold text-luna transition active:scale-95 disabled:opacity-60">
+        <Sparkles className={`size-5 ${busy ? "animate-spin" : ""}`} /> {busy ? t("thinking") : t("suggest")}
       </button>
       {ideas.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {ideas.map((n, i) => (
-            <button type="button" key={n} onClick={() => setPerson(n)} className="pop glass rounded-full px-3 py-1.5 text-sm" style={{ animationDelay: `${i * 60}ms` }}>
+            <button type="button" key={n} onClick={() => setPerson(n)} className={`pop min-h-12 rounded-full px-4 font-medium transition active:scale-95 ${n === person ? "bg-gold text-gold-ink" : "glass"}`} style={{ animationDelay: `${i * 60}ms` }}>
               {n}
             </button>
           ))}
         </div>
       )}
-      <Btn type="submit" tone="gold" className="mt-auto py-4 text-lg" disabled={!person.trim()}>{t("done")}</Btn>
+      <Btn type="submit" tone="gold" className="mt-auto min-h-16 text-xl" disabled={!person.trim()}>{t("done")}</Btn>
     </form>
   );
 }

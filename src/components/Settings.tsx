@@ -21,7 +21,7 @@ export function SettingsButton({ room }: { room?: string }) {
       <Sheet ref={ref}>
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold">{t("settings")}</h2>
-            <button onClick={() => ref.current?.close()} aria-label="close" className="grid size-10 place-items-center rounded-full text-muted"><X className="size-5" /></button>
+            <button onClick={() => ref.current?.close()} aria-label={t("close")} className="grid size-10 place-items-center rounded-full text-muted"><X className="size-5" aria-hidden /></button>
           </div>
 
           <section className="flex flex-col gap-2">

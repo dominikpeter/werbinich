@@ -28,10 +28,11 @@ function wav(samples: Float32Array): string {
 
 /**
  * `auto`: hands-free, every utterance goes to `onClip`. Otherwise `hold()`/`release()` record one push-to-talk clip.
- * `level` (0..1) drives the mic ring. The mic opens only while `enabled`.
+ * `level.current` (0..1) drives the waveform. The mic opens only while `enabled`.
  */
 export function useListener(enabled: boolean, auto: boolean, onClip: (c: Clip) => void) {
-  const [level, setLevel] = useState(0);
+  // the voice level (0..1) lives in a ref, not state: the waveform reads it every frame without re-rendering the screen
+  const level = useRef(0);
   const [speaking, setSpeaking] = useState(false);
   const [error, setError] = useState<"denied" | null>(null);
   const cb = useRef(onClip);
@@ -79,7 +80,7 @@ export function useListener(enabled: boolean, auto: boolean, onClip: (c: Clip) =
           }
           const rms = Math.sqrt(sum / out.length);
           const ms = (out.length / RATE) * 1000;
-          setLevel(Math.min(1, rms * 12));
+          level.current = Math.min(1, rms * 12);
           // the noise floor follows the room slowly (up) and quickly (down); speech is well above it
           floor = rms < floor ? floor * 0.9 + rms * 0.1 : floor * 0.995 + rms * 0.005;
           const loud = rms > Math.max(0.012, floor * 2.8);
@@ -115,7 +116,7 @@ export function useListener(enabled: boolean, auto: boolean, onClip: (c: Clip) =
     return () => {
       dead = true;
       stop();
-      setLevel(0);
+      level.current = 0;
       setSpeaking(false);
     };
   }, [enabled]);

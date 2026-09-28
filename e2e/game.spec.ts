@@ -57,7 +57,7 @@ test("a room of two: the whole game with joker, solve, give-up and reveal", asyn
   await expect(table.getByTestId("answer-panel")).toContainText("Bin ich eine Frau?");
   await expect(table.getByTestId("answer-panel")).toContainText("Jev meint");
   await table.getByRole("button", { name: "Ja", exact: true }).click();
-  await expect(p.getByTestId("tree")).toContainText("Ja");
+  await expect(p.getByTestId("tree").getByLabel("Ja", { exact: true })).toBeVisible();
   // warmth arrives after the answer
   await expect(p.getByText(/Jev-Wärme/)).toBeVisible();
 
@@ -121,7 +121,7 @@ test("one phone: pass it for writing, the secret stays covered, voice lines are 
   await expect(page.getByTestId("answer-panel")).toContainText("Bin ich eine Frau?");
   await expect(page.getByText("Jev meint")).toHaveCount(0);
   expect(await hear("ja genau")).toMatchObject({ did: "answered", answer: "yes" });
-  await expect(page.getByTestId("tree")).toContainText("Ja");
+  await expect(page.getByTestId("tree").getByLabel("Ja", { exact: true })).toBeVisible();
   expect(await hear("nein")).toMatchObject({ did: "chatter" }); // no open question: an answer means nothing
 });
 

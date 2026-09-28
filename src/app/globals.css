@@ -4,7 +4,7 @@
 
 /* one dark theme: an interrogation room. yes = mint, no = coral, solved = gold, Jev = violet, Luna = cyan */
 @theme {
-  --color-canvas: #0b0a12;
+  --color-canvas: #0c0b14;
   --color-surface: #15131f;
   --color-raised: #1f1c2c;
   --color-line: #2e2a40;
@@ -35,6 +35,17 @@ html {
   background: var(--color-canvas);
   color: var(--color-ink);
   color-scheme: dark;
+  touch-action: manipulation; /* no double-tap zoom delay on buttons */
+  -webkit-tap-highlight-color: transparent; /* buttons show their own :active scale */
+}
+
+/* one visible focus ring for keyboards and switch control, on everything; unlayered, so it wins over outline-none */
+:focus-visible {
+  outline: 2px solid var(--color-luna);
+  outline-offset: 3px;
+}
+dialog {
+  overscroll-behavior: contain;
 }
 
 /* the spotlight over the table, and a faint grain so the dark isn't flat */
@@ -55,8 +66,29 @@ body {
 .glow-jev {
   box-shadow: 0 0 0 1px color-mix(in oklch, var(--color-jev) 50%, transparent), 0 10px 40px -10px color-mix(in oklch, var(--color-jev) 60%, transparent);
 }
+.glow-luna {
+  box-shadow: 0 0 0 6px color-mix(in oklch, var(--color-luna) 18%, transparent), 0 12px 40px -8px color-mix(in oklch, var(--color-luna) 70%, transparent);
+}
 .glow-gold {
   box-shadow: 0 0 0 1px var(--color-gold), 0 12px 50px -12px var(--color-gold);
+}
+
+/* the sticky note: flat yellow paper, a slightly darker lower edge where it curls off the forehead, a strip of tape */
+.note {
+  background: linear-gradient(to bottom, var(--color-gold) 78%, color-mix(in oklch, var(--color-gold), var(--color-gold-ink) 10%));
+  box-shadow: 0 18px 40px -18px color-mix(in oklch, var(--color-gold) 55%, transparent), 0 2px 0 color-mix(in oklch, var(--color-gold), black 25%);
+}
+.tape {
+  position: absolute;
+  top: -0.6rem;
+  left: 50%;
+  width: 4.5rem;
+  height: 1.3rem;
+  translate: -50% 0;
+  rotate: 2deg;
+  background: color-mix(in oklch, var(--color-ink) 45%, transparent);
+  backdrop-filter: blur(2px);
+  border-radius: 2px;
 }
 
 /* the card flip at the end: a locked card turns face up */
@@ -97,12 +129,6 @@ body {
 }
 .rise {
   animation: rise 380ms ease-out both;
-}
-
-/* the mic ring pulses with the voice level (--level set from the analyser, 0..1) */
-.mic-ring {
-  box-shadow: 0 0 0 calc(4px + var(--level, 0) * 26px) color-mix(in oklch, var(--color-luna) 28%, transparent);
-  transition: box-shadow 80ms linear;
 }
 
 @keyframes float {

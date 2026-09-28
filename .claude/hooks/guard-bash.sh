@@ -8,7 +8,8 @@ git_cmd() { printf '%s' "$cmd" | grep -qE "(^|[;&|(\`[:space:]])git( -C [^ ]+)? 
 if printf '%s' "$cmd" | grep -qE -- "git( -C [^ ]+)? (commit|push)[^;&|]*--no-verify|(^|[;&|[:space:]])SKIP=[^ ]+( [A-Z_]+=[^ ]+)* git "; then
   decide deny "Hooks are the quality gate (lint, types, tests, secret scan). Fix what they report instead of skipping them."
 fi
-if git_cmd push && printf '%s' "$cmd" | grep -qE -- "(--force([^-]|$)|[[:space:]]-f([[:space:]]|$))"; then
+# the flag must belong to the push itself: `pkill -f x; git push` is fine
+if printf '%s' "$cmd" | grep -qE -- "git( -C [^ ]+)? push[^;&|]*( --force([^-]|$)| -f( |$))"; then
   decide deny "No force-push. If history must change, use --force-with-lease on dev, never on main."
 fi
 if git_cmd "(commit|push|merge)" && [ "$(git -C "${CLAUDE_PROJECT_DIR:-.}" branch --show-current 2>/dev/null)" = main ]; then

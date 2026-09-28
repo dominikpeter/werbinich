@@ -62,7 +62,7 @@ export default function RoomPage() {
 
   const Phase = { lobby: Lobby, write: Write, play: Play, end: End }[view.phase];
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col px-4 pb-4">
+    <main className={`mx-auto flex w-full max-w-xl flex-col px-4 pb-4 ${view.phase === "play" ? "h-dvh" : "min-h-dvh"}`}>
       <header className="flex items-center justify-between py-2 font-mono text-sm text-muted">
         <BackButton view={view} act={act} />
         <span className="tracking-code" data-testid="room-code">{code}</span>

@@ -11,7 +11,9 @@ export const aiOn = () => fake || !!KEY;
 
 // gpt-transcribe: best on Swiss German by a margin (scripts/bench-swiss.mts, Sep 2026: 57/63 end to end vs 48 for 4o-mini), ~0.6 s
 const STT = (env.STT_MODELS ?? "openai/gpt-transcribe,qwen/qwen3-asr-flash-2026-02-10").split(",");
-const CHAT = (env.CHAT_MODELS ?? "openai/gpt-6-luna,deepseek/deepseek-v4.1-flash").split(",");
+// Luna straight at OpenAI first when there's a key: OpenRouter caps newer accounts per minute on Luna, and a party asking
+// for jokers at once hits it (Zettelispiil learned this). "direct:" marks that route; the rest go through OpenRouter.
+const CHAT = (env.CHAT_MODELS ?? `${env.OPENAI_API_KEY ? "direct:gpt-6-luna," : ""}openai/gpt-6-luna,deepseek/deepseek-v4.1-flash`).split(",");
 const JEV = env.JEV_MODEL ?? "~typesafe/jev-latest";
 const LANG: Record<Lang, string> = { de: "German (Swiss spelling: ss, never ß)", en: "English", fr: "French" };
 
@@ -24,6 +26,18 @@ async function post(path: string, body: unknown, ms = 15_000) {
   });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(`openrouter ${path} ${r.status} ${JSON.stringify(j).slice(0, 200)}`);
+  return j;
+}
+
+async function openai(body: unknown) {
+  const r = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(15_000),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(`openai ${r.status} ${JSON.stringify(j).slice(0, 200)}`);
   return j;
 }
 
@@ -120,12 +134,12 @@ export async function route(mode: "ask" | "answer", heard: string, context: stri
 // ---- Luna: text ----
 async function chat<T>(system: string, prompt: string, key: string, maxTokens = 400, models = CHAT): Promise<T[]> {
   const schema = { type: "object", properties: { [key]: { type: "array", items: { type: "string" } } }, required: [key], additionalProperties: false };
+  const messages = [{ role: "system", content: system }, { role: "user", content: prompt }];
+  const response_format = { type: "json_schema", json_schema: { name: "out", strict: true, schema } };
   const j = await firstOk(models, (model) =>
-    post("/v1/chat/completions", {
-      model, reasoning: { effort: "none" }, temperature: 0.7, max_tokens: maxTokens,
-      messages: [{ role: "system", content: system }, { role: "user", content: prompt }],
-      response_format: { type: "json_schema", json_schema: { name: "out", strict: true, schema } },
-    }),
+    model.startsWith("direct:")
+      ? openai({ model: model.slice(7), reasoning_effort: "none", max_completion_tokens: maxTokens, messages, response_format })
+      : post("/v1/chat/completions", { model, reasoning: { effort: "none" }, temperature: 0.7, max_tokens: maxTokens, messages, response_format }),
   );
   const out = JSON.parse(String(j.choices?.[0]?.message?.content ?? "{}").replace(/^```(json)?|```$/g, ""));
   return Array.isArray(out[key]) ? out[key] : [];
@@ -168,6 +182,8 @@ export async function giveUpPick(p: Player, lang: Lang): Promise<{ candidates: {
     `Answers so far:\n${factText(p)}\n\nName the 5 most likely people or characters, most likely first. Names only.`, "names"), 5, 60);
   const lower = p.person.toLowerCase();
   const pool = names.filter((n) => n.toLowerCase() !== lower).slice(0, 5);
+  // Luna had nothing (down, or rate limited): no line-up at all beats one where the answer stands alone at 100%
+  if (pool.length < 2) return { candidates: [], pick: -1 };
   pool.splice(Math.floor(Math.random() * (pool.length + 1)), 0, p.person);
   if (fake) return { candidates: pool.map((name) => ({ name, p: 1 / pool.length })), pick: 0 };
   const a = await jev({ facts: factText(p) }, {
