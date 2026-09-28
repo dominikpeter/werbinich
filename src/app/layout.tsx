@@ -26,7 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: langScript }} />
       </head>
-      <body className="flex min-h-full flex-col font-sans pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">{children}</body>
+      <body className="flex min-h-full flex-col font-sans safe-top safe-bottom">{children}</body>
     </html>
   );
 }

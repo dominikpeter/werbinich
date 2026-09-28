@@ -121,3 +121,15 @@ body {
     transition: none !important;
   }
 }
+
+/* the phone's notch and home bar */
+@utility safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+@utility safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+/* a bottom sheet clears the home bar, and keeps some air where there is none */
+@utility sheet-pad {
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+}

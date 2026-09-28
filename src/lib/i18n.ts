@@ -1,4 +1,4 @@
-// UI strings: DE (default, Swiss spelling "ss", never "ß"), EN, FR. `{x}` placeholders are filled by t().
+// UI strings: DE (default, Swiss spelling: "ss", never the sharp s), EN, FR. `{x}` placeholders are filled by t().
 const de = {
   tagline: "Das Partyspiel, bei dem die KI mitspielt.",
   sub: "Jemand gibt dir eine Person. Du fragst mit Ja/Nein, bis du weisst, wer du bist. Jev rechnet mit, Luna gibt Tipps.",
