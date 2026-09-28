@@ -11,6 +11,14 @@ export function loadIdentity(code: string): Identity | null {
     return null;
   }
 }
+/** this phone has seen a game to its end: the install hint waits for that (End sets it) */
+export const PLAYED_KEY = "werbinich:played";
+export function markPlayed() {
+  try {
+    localStorage.setItem(PLAYED_KEY, "1");
+  } catch {}
+}
+
 export function saveIdentity(code: string, id: Identity) {
   try {
     localStorage.setItem(idKey(code), JSON.stringify(id));

@@ -13,7 +13,7 @@ const asker = async (pages: Page[]) => {
 /** the mic is the default with AI on; the keyboard is one tap away */
 async function typeQ(p: Page, q: string) {
   const box = p.getByRole("textbox", { name: "Frage stellen" });
-  if (!(await box.isVisible())) await p.getByRole("button", { name: "keyboard" }).click();
+  if (!(await box.isVisible())) await p.getByRole("button", { name: "Tippen" }).click();
   await box.fill(q);
   await p.getByRole("button", { name: "Fragen" }).click();
 }
@@ -57,7 +57,7 @@ test("a room of two: the whole game with joker, solve, give-up and reveal", asyn
   await expect(table.getByTestId("answer-panel")).toContainText("Bin ich eine Frau?");
   await expect(table.getByTestId("answer-panel")).toContainText("Jev meint");
   await table.getByRole("button", { name: "Ja", exact: true }).click();
-  await expect(p.getByTestId("tree")).toContainText("Ja");
+  await expect(p.getByTestId("tree").getByLabel("Ja", { exact: true })).toBeVisible();
   // warmth arrives after the answer
   await expect(p.getByText(/Jev-Wärme/)).toBeVisible();
 
@@ -65,7 +65,8 @@ test("a room of two: the whole game with joker, solve, give-up and reveal", asyn
   await p.getByRole("button", { name: /Joker/ }).click();
   await expect(p.getByTestId("joker")).toContainText("Lebe ich noch?");
   await p.getByTestId("joker").getByRole("button", { name: /Lebe ich noch/ }).click();
-  await expect(p.getByRole("button", { name: /1 übrig/ })).toBeVisible();
+  await expect(p.getByTestId("tree").getByLabel("Joker")).toBeVisible(); // the path marks a joker question
+  await expect(table.getByTestId("answer-panel")).toContainText("Lebe ich noch?");
   await table.getByRole("button", { name: "Nein", exact: true }).click();
 
   // "no" passed the turn: Beni asks now and guesses right; a yes to a Jev-recognised guess solves it
@@ -121,7 +122,7 @@ test("one phone: pass it for writing, the secret stays covered, voice lines are 
   await expect(page.getByTestId("answer-panel")).toContainText("Bin ich eine Frau?");
   await expect(page.getByText("Jev meint")).toHaveCount(0);
   expect(await hear("ja genau")).toMatchObject({ did: "answered", answer: "yes" });
-  await expect(page.getByTestId("tree")).toContainText("Ja");
+  await expect(page.getByTestId("tree").getByLabel("Ja", { exact: true })).toBeVisible();
   expect(await hear("nein")).toMatchObject({ did: "chatter" }); // no open question: an answer means nothing
 });
 

@@ -20,16 +20,28 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 10 # a hung hook fails fast instead of holding the pull request for six hours
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with: { node-version: 22, cache: npm }
       - uses: extractions/setup-just@v4
       - run: npm ci
-      - run: just check
+      # the same hooks a commit runs (lint incl. shadcn, types, tests, secret scan, spelling, actionlint): skipping them
+      # locally with --no-verify still fails here
+      - uses: j178/prek-action@v3.0.0
+        with: { install-only: true, prek-version: "0.4.8" } # the version `just setup` runs locally
+      - name: actionlint (for the workflow hook)
+        run: |
+          # pinned: the release's own download script and binary, not whatever `main`/`latest` point at today
+          bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.12/scripts/download-actionlint.bash) 1.7.12 "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+      - run: prek run --all-files --show-diff-on-failure --color=always
+        env: { SKIP: no-commit-to-branch } # CI checks main itself after a merge; the branch rule is for laptops
 
   e2e:
     needs: check
+    timeout-minutes: 20
     # ponytail: pinned, Playwright's --with-deps tends to lag a new Ubuntu; bump once it supports it
     runs-on: ubuntu-24.04
     steps:

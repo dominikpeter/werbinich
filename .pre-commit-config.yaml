@@ -1,15 +1,55 @@
-# prek (https://github.com/j178/prek) runs these on every commit. Install once: `just setup`.
+# prek (https://github.com/j178/prek) runs these on every commit, message and push. Install once: `just setup`.
+# CI runs the same file (`prek run --all-files`), so a hook skipped locally still fails the pull request.
+default_install_hook_types: [pre-commit, commit-msg, pre-push]
+default_stages: [pre-commit]
 repos:
+  # fast built-ins (prek implements them natively, nothing to download)
+  - repo: builtin
+    hooks:
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=600]
+        exclude: ^ios/
+      - id: detect-private-key
+      - id: check-case-conflict
+      - id: check-json
+        exclude: ^(tsconfig\.json|ios/)
+      - id: check-yaml
+      - id: check-symlinks
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: no-commit-to-branch # main only changes through a pull request
+        args: [--branch, main]
+
   - repo: local
     hooks:
       - id: no-secrets
         name: no API keys
-        entry: bash -c '! git diff --cached -U0 | grep -E "^\+.*sk-(or-v1-|proj-)?[A-Za-z0-9_-]{20,}"'
+        # a commit: the staged lines; CI (no staged diff there): every tracked file. --no-pager: prek gives hooks a terminal
+        # when colouring, and git would then open less and wait for a key forever
+        entry: bash -c 'p="sk-(or-v1-|proj-)?[A-Za-z0-9_-]{20,}|vcp_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}"; if [ -n "${CI:-}" ]; then ! git --no-pager grep -nE "$p"; else ! git --no-pager diff --cached -U0 | grep -E "^\+.*($p)"; fi'
         language: system
         pass_filenames: false
+      - id: no-env-files
+        name: no .env files
+        entry: bash -c 'echo "never commit env files, they hold keys - $*"; exit 1' --
+        language: system
+        files: (^|/)\.env
+      - id: swiss-spelling
+        name: Swiss spelling (ss, never ß)
+        entry: bash -c '! grep -n "ß" "$@"' --
+        language: system
+        files: ^(src|docs)/
+        exclude: ^src/lib/ai\.ts$ # it tells the model not to use ß
+      - id: actionlint
+        name: GitHub workflows (actionlint)
+        # a laptop without it gets a note, not a blocked commit; CI installs it and enforces the check
+        entry: bash -c 'command -v actionlint >/dev/null || { echo "actionlint not installed (brew install actionlint); CI checks the workflows"; exit 0; }; actionlint "$@"' --
+        language: system
+        files: ^\.github/workflows/.*\.ya?ml$
       - id: lint
-        name: eslint
-        entry: npx eslint
+        name: eslint (incl. shadcn design-token lint)
+        entry: npx eslint --max-warnings=0
         language: system
         files: \.(ts|tsx|mjs)$
       - id: typecheck
@@ -30,3 +70,17 @@ repos:
         language: system
         pass_filenames: false
         files: ^package\.json$
+
+      - id: conventional-commit
+        name: "commit message: feat|fix|perf|… summary"
+        entry: bash scripts/commit-msg.sh
+        language: system
+        stages: [commit-msg]
+
+      - id: no-push-to-main
+        name: no direct push to main
+        entry: bash -c '[ "$(git branch --show-current)" != main ] || { echo "push dev and open a pull request (just pr)"; exit 1; }'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]

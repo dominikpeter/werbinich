@@ -5,15 +5,8 @@ import { Smartphone, Users, ArrowRight } from "lucide-react";
 import { api, ApiError, NAME_KEY, saveIdentity } from "@/lib/client";
 import { Btn, useLang } from "@/components/ui";
 import { SettingsButton } from "@/components/Settings";
+import { InstallHint } from "@/components/InstallHint";
 import type { Key } from "@/lib/i18n";
-
-// "forehead" notes over the title: who might you be?
-const NOTES = [
-  { name: "Heidi", r: "-rotate-6" },
-  { name: "Einstein", r: "rotate-3" },
-  { name: "Federer", r: "-rotate-2" },
-  { name: "Pippi", r: "rotate-6" },
-];
 
 export default function Home() {
   const { lang, t } = useLang();
@@ -49,21 +42,18 @@ export default function Home() {
 
       <div className="flex flex-1 flex-col justify-center">
 
-      <section className="flex flex-col items-center gap-5 sm:gap-7">
-        <div className="flex flex-wrap justify-center gap-2">
-          {NOTES.map((n, i) => (
-            <span key={n.name} className={`float rounded-lg bg-gold px-2.5 py-1 text-sm font-semibold sm:px-3.5 sm:py-1.5 sm:text-base text-gold-ink shadow-lg ${n.r}`} style={{ animationDelay: `${i * 0.6}s` }}>
-              {n.name}?
-            </span>
-          ))}
-        </div>
-        <h1 className="text-center text-6xl leading-none font-bold tracking-tighter sm:text-8xl short:text-5xl">
-          Wer bin <span className="bg-gradient-to-r from-jev to-luna bg-clip-text text-transparent">ich?</span>
+      {/* the title is the note itself: what you'd stick on someone's forehead */}
+      <section className="flex justify-center">
+        <h1 className="note pop relative -rotate-3 rounded-md px-8 pt-8 pb-6 text-center text-6xl leading-none font-bold tracking-tight text-gold-ink sm:text-7xl short:text-5xl">
+          <span className="tape" aria-hidden />
+          Wer bin
+          <br />
+          ich?
         </h1>
       </section>
 
-      <p className="mt-5 text-center text-lg font-semibold sm:text-xl">{t("tagline")}</p>
-      <p className="mx-auto mt-2 max-w-sm text-center text-sm text-muted sm:text-base">{t("sub")}</p>
+      <p className="mt-10 text-center text-xl font-semibold text-balance sm:text-2xl short:mt-6">{t("tagline")}</p>
+      <p className="mx-auto mt-2 max-w-sm text-center text-muted text-balance">{t("sub")}</p>
       </div>
 
       <div className="flex flex-col gap-3 pt-6">
@@ -71,6 +61,8 @@ export default function Home() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder={t("yourName")}
+          name="nickname"
+          autoComplete="nickname"
           maxLength={24}
           aria-label={t("yourName")}
           className="glass min-h-14 rounded-2xl px-5 text-lg outline-none focus:border-jev"
@@ -93,13 +85,18 @@ export default function Home() {
             onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 5))}
             placeholder={t("code")}
             aria-label={t("code")}
+            name="room"
+            autoComplete="off"
+            autoCapitalize="characters"
+            spellCheck={false}
             className="glass min-h-14 w-0 flex-1 rounded-2xl px-5 font-mono text-lg tracking-code uppercase outline-none"
           />
           <Btn tone="ghost" disabled={busy || code.length !== 5} onClick={join}>
             {t("join")} <ArrowRight className="size-4" />
           </Btn>
         </div>
-        {err && <p className="text-center text-sm text-no" role="alert">{err}</p>}
+        {err && <p className="text-center text-sm text-no" role="alert" aria-live="polite">{err}</p>}
+        <InstallHint />
       </div>
 
     </main>

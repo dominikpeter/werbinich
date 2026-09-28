@@ -4,6 +4,7 @@ import Link from "next/link";
 import { BookOpen, LogOut, Mic, MicOff, Settings as Gear, X } from "lucide-react";
 import { LANGS } from "@/lib/i18n";
 import { setLang, setVoice, useLang, useVoice } from "./ui";
+import { Sheet } from "./Sheet";
 
 const LANG_LABEL = { de: "Deutsch", en: "English", fr: "Français" } as const;
 
@@ -17,15 +18,10 @@ export function SettingsButton({ room }: { room?: string }) {
       <button onClick={() => ref.current?.showModal()} aria-label={t("settings")} className="grid size-11 place-items-center rounded-full glass text-muted transition active:scale-90">
         <Gear className="size-5" />
       </button>
-      <dialog
-        ref={ref}
-        onClick={(e) => e.target === ref.current && ref.current.close()}
-        className="m-0 mt-auto w-full max-w-none bg-transparent p-0 text-ink backdrop:bg-canvas/70 backdrop:backdrop-blur-sm"
-      >
-        <div className="rise glass mx-auto flex w-full max-w-xl flex-col gap-6 rounded-t-3xl p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+      <Sheet ref={ref} label={t("settings")}>
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold">{t("settings")}</h2>
-            <button onClick={() => ref.current?.close()} aria-label="close" className="grid size-10 place-items-center rounded-full text-muted"><X className="size-5" /></button>
+            <button onClick={() => ref.current?.close()} aria-label={t("close")} className="grid size-10 place-items-center rounded-full text-muted"><X className="size-5" aria-hidden /></button>
           </div>
 
           <section className="flex flex-col gap-2">
@@ -52,7 +48,7 @@ export function SettingsButton({ room }: { room?: string }) {
           </section>
 
           <section className="flex flex-col gap-1 rounded-2xl bg-canvas p-4 font-mono text-xs text-muted">
-            <p><span className="text-luna">STT</span> gpt-4o-mini-transcribe — {t("aboutStt")}</p>
+            <p><span className="text-luna">STT</span> gpt-transcribe — {t("aboutStt")}</p>
             <p><span className="text-luna">Luna</span> gpt-6-luna — {t("aboutLuna")}</p>
             <p><span className="text-jev">Jev</span> typesafe/jev — {t("aboutJev")}</p>
           </section>
@@ -62,8 +58,7 @@ export function SettingsButton({ room }: { room?: string }) {
             {room && <Link href="/" className="flex min-h-12 items-center gap-3 rounded-2xl px-2 font-semibold text-no"><LogOut className="size-5" /> {t("leave")} · {room}</Link>}
           </div>
           <p className="text-center font-mono text-2xs text-muted">werbinich.ai v{process.env.NEXT_PUBLIC_VERSION}</p>
-        </div>
-      </dialog>
+      </Sheet>
     </>
   );
 }

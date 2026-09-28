@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   openGraph: { title: "werbinich.ai", description, siteName: "werbinich.ai", locale: "de_CH", type: "website" },
 };
 
-export const viewport: Viewport = { viewportFit: "cover", themeColor: "#0b0a12" };
+export const viewport: Viewport = { viewportFit: "cover", themeColor: "#0c0b14", width: "device-width", initialScale: 1, interactiveWidget: "resizes-content" }; // the keyboard shrinks the layout, the dock stays above it
 
 // the saved language before first paint
 const langScript = `try{var l=localStorage.getItem("werbinich:lang");if(l)document.documentElement.lang=l}catch(e){}`;
@@ -26,7 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: langScript }} />
       </head>
-      <body className="flex min-h-full flex-col font-sans pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">{children}</body>
+      <body className="flex min-h-full flex-col font-sans safe-top safe-bottom">{children}</body>
     </html>
   );
 }
